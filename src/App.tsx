@@ -423,7 +423,7 @@ const Index = () => {
 
           <section className="contact-form">
             <h3 className="h3 form-title">Contact Form</h3>
-            <form action="mailto:jainpratham536@gmail.com" method="post" encType="text/plain" className="form">
+            <form action="https://formspree.io/f/xaqddwla" method="POST" className="form">
               <div className="input-wrapper">
                 <input
                   type="text"
