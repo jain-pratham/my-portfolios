@@ -1,10 +1,8 @@
----
-import LaunchMessage from '../components/LaunchMessage.svelte';
+﻿---
 import MainLayout from '../layouts/MainLayout.astro';
+import LandingExperience from '../components/LandingExperience.svelte';
 ---
 
 <MainLayout title="Core4ix">
-  <main class="flex min-h-screen items-center justify-center px-6 text-center">
-    <LaunchMessage />
-  </main>
+  <LandingExperience client:load />
 </MainLayout>
