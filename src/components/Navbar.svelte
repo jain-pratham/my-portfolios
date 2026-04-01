@@ -1,4 +1,4 @@
-﻿<script>
+<script>
   import { onMount } from 'svelte';
 
   let isScrolled = false;
@@ -7,16 +7,35 @@
 
   const navLinks = [
     {
-      name: 'SERVICES',
-      href: '#solutions',
-      menu: [
-        { title: 'Web Development', detail: 'Modern websites and web apps' },
-        { title: 'App Development', detail: 'Android and iOS solutions' },
-        { title: 'E-Commerce', detail: 'Conversion-focused storefronts' },
-        { title: 'ERP Solutions', detail: 'Business process automation' },
-        { title: 'Cloud Services', detail: 'Scalable cloud architecture' }
-      ]
-    },
+    name: 'Services',
+    menu: [
+      { 
+        title: 'Web Development', 
+        detail: 'Modern websites and web apps',
+        link: '/services/web-development'
+      },
+      { 
+        title: 'App Development', 
+        detail: 'Android and iOS solutions',
+        link: '/services/app-development'
+      },
+      { 
+        title: 'E-Commerce', 
+        detail: 'Conversion-focused storefronts',
+        link: '/services/ecommerce'
+      },
+      { 
+        title: 'ERP Solutions', 
+        detail: 'Business process automation',
+        link: '/services/erp-solutions'
+      },
+      { 
+        title: 'Cloud Services', 
+        detail: 'Scalable cloud architecture',
+        link: '/services/cloud-services'
+      }
+    ]
+  },
     {
       name: 'TECHNOLOGIES',
       href: '#technologies',
@@ -30,12 +49,13 @@
     },
     {
       name: 'AI',
-      href: '#services',
+      href: '#',
       menu: [
-        { title: 'AI Chatbots', detail: 'Support and sales automation' },
-        { title: 'Vision AI', detail: 'Image and document intelligence' },
-        { title: 'Process AI', detail: 'Workflow optimization systems' },
-        { title: 'Predictive Models', detail: 'Forecasting and recommendations' }
+        { title: 'AI Consultancy', href: '/ai/ai-consultancy', detail: 'Strategic AI planning and roadmap' },
+        { title: 'AI Integration', href: '/ai/ai-integration', detail: 'Seamless deployment of AI tools' },
+        { title: 'AI/ML Development', href: '/ai/ai-ml-development', detail: 'Custom models and algorithms' },
+        { title: 'AI Agent Development', href: '/ai/ai-agent-development', detail: 'Autonomous intelligent agents' },
+        { title: 'Generative AI', href: '/ai/generative-ai', detail: 'Content and creative AI solutions' }
       ]
     },
     { name: 'INDUSTRIES', href: '#industries' },
@@ -121,7 +141,7 @@
 
                       <div class="grid grid-cols-2 gap-x-8 gap-y-8">
                         {#each link.menu as item}
-                          <a href={link.href} class="group/item flex items-start gap-4 transition-all duration-300" on:click={closeMenus}>
+                          <a href={item.href || link.href} class="group/item flex items-start gap-4 transition-all duration-300" on:click={closeMenus}>
                             <div class="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm text-[#1f4e79] transition-all duration-300 group-hover/item:border-[#00c6ff] group-hover/item:text-[#00c6ff]">
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />

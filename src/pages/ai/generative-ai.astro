@@ -1,0 +1,14 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import GenerativeAiComponent from '../../components/GenerativeAi/GenerativeAi.svelte';
+---
+
+<MainLayout title="Generative AI Solutions | Core4ix">
+  <Navbar client:load />
+  <div class="pt-0 md:pt-0">
+    <GenerativeAiComponent client:load />
+  </div>
+  <Footer client:load />
+</MainLayout>
