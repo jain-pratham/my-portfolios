@@ -1,4 +1,4 @@
-﻿<script>
+<script>
   import { onMount } from 'svelte';
 
   let isScrolled = false;
@@ -6,43 +6,98 @@
   let activeMegaMenu = null;
   let navShell;
 
-  const navLinks = [
-    {
-      name: 'Services',
-      href: '#solutions',
-      menu: [
-        { title: 'Web Development', detail: 'Modern websites and web apps' },
-        { title: 'App Development', detail: 'Android and iOS solutions' },
-        { title: 'E-Commerce', detail: 'Conversion-focused storefronts' },
-        { title: 'ERP Solutions', detail: 'Business process automation' },
-        { title: 'Cloud Services', detail: 'Scalable cloud architecture' }
-      ]
-    },
-    {
-      name: 'Technologies',
-      href: '#technologies',
-      menu: [
-        { title: 'Frontend Stack', detail: 'React, Next.js, Vue, Svelte' },
-        { title: 'Backend Stack', detail: 'Node.js, Python, Java, PHP' },
-        { title: 'Databases', detail: 'MySQL, PostgreSQL, MongoDB' },
-        { title: 'DevOps', detail: 'Docker, CI/CD, Vercel, AWS' },
-        { title: 'UI/UX Tools', detail: 'Figma, Framer, XD' }
-      ]
-    },
-    {
-      name: 'AI',
-      href: '#services',
-      menu: [
-        { title: 'AI Chatbots', detail: 'Support and sales automation' },
-        { title: 'Vision AI', detail: 'Image and document intelligence' },
-        { title: 'Process AI', detail: 'Workflow optimization systems' },
-        { title: 'Predictive Models', detail: 'Forecasting and recommendations' }
-      ]
-    },
-    { name: 'Industries', href: '#industries' },
-    { name: 'Portfolio', href: '#projects' },
-  
-  ];
+const navLinks = [
+  {
+    name: 'Services',
+    menu: [
+      { 
+        title: 'Web Development', 
+        detail: 'Modern websites and web apps',
+        link: '/services/web-development'
+      },
+      { 
+        title: 'App Development', 
+        detail: 'Android and iOS solutions',
+        link: '/services/app-development'
+      },
+      { 
+        title: 'E-Commerce', 
+        detail: 'Conversion-focused storefronts',
+        link: '/services/ecommerce'
+      },
+      { 
+        title: 'ERP Solutions', 
+        detail: 'Business process automation',
+        link: '/services/erp-solutions'
+      },
+      { 
+        title: 'Cloud Services', 
+        detail: 'Scalable cloud architecture',
+        link: '/services/cloud-services'
+      }
+    ]
+  },
+
+  {
+    name: 'Technologies',
+    menu: [
+      { 
+        title: 'Frontend Stack', 
+        detail: 'React, Next.js, Vue, Svelte',
+        link: '/technologies/frontend'
+      },
+      { 
+        title: 'Backend Stack', 
+        detail: 'Node.js, Python, Java, PHP',
+        link: '/technologies/backend'
+      },
+      { 
+        title: 'Databases', 
+        detail: 'MySQL, PostgreSQL, MongoDB',
+        link: '/technologies/databases'
+      },
+      { 
+        title: 'DevOps', 
+        detail: 'Docker, CI/CD, Vercel, AWS',
+        link: '/technologies/devops'
+      },
+      { 
+        title: 'UI/UX Tools', 
+        detail: 'Figma, Framer, XD',
+        link: '/technologies/ui-ux'
+      }
+    ]
+  },
+
+  {
+    name: 'AI',
+    menu: [
+      { 
+        title: 'AI Chatbots', 
+        detail: 'Support and sales automation',
+        link: '/ai/chatbots'
+      },
+      { 
+        title: 'Vision AI', 
+        detail: 'Image and document intelligence',
+        link: '/ai/vision'
+      },
+      { 
+        title: 'Process AI', 
+        detail: 'Workflow optimization systems',
+        link: '/ai/process'
+      },
+      { 
+        title: 'Predictive Models', 
+        detail: 'Forecasting and recommendations',
+        link: '/ai/predictive'
+      }
+    ]
+  },
+
+  { name: 'Industries', href: '#industries' },
+  { name: 'Portfolio', href: '#projects' }
+];
 
   $: activeMenuConfig = navLinks.find((item) => item.name === activeMegaMenu);
 
@@ -167,11 +222,15 @@
 
             <div class="mt-4 grid grid-cols-2 gap-3">
               {#each activeMenuConfig.menu as item}
-                <a href={activeMenuConfig.href} class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-[#1f4e79]/20 hover:bg-white" on:click={closeMenus}>
-                  <p class="text-base font-bold text-slate-800">{item.title}</p>
-                  <p class="mt-1 text-xs text-slate-500">{item.detail}</p>
-                </a>
-              {/each}
+  <a 
+    href={item.link}
+    class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-[#1f4e79]/20 hover:bg-white"
+    on:click={closeMenus}
+  >
+    <p class="text-base font-bold text-slate-800">{item.title}</p>
+    <p class="mt-1 text-xs text-slate-500">{item.detail}</p>
+  </a>
+{/each}
             </div>
           </div>
 
