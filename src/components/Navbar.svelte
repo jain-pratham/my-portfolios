@@ -12,27 +12,27 @@
       { 
         title: 'Web Development', 
         detail: 'Modern websites and web apps',
-        link: '/services/web-development'
+        href: '/services/web-development'
       },
       { 
         title: 'App Development', 
         detail: 'Android and iOS solutions',
-        link: '/services/app-development'
+        href: '/services/app-development'
       },
       { 
         title: 'E-Commerce', 
         detail: 'Conversion-focused storefronts',
-        link: '/services/ecommerce'
+        href: '/services/ecommerce'
       },
       { 
         title: 'ERP Solutions', 
         detail: 'Business process automation',
-        link: '/services/erp-solutions'
+        href: '/services/erp-solutions'
       },
       { 
         title: 'Cloud Services', 
         detail: 'Scalable cloud architecture',
-        link: '/services/cloud-services'
+        href: '/services/cloud-services'
       }
     ]
   },
@@ -227,14 +227,28 @@
           <a href="tel:+919909388561" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#00c6ff] px-5 py-2.5 text-xs font-bold text-[#1f4e79]">Call Now</a>
         </div>
 
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1 max-h-[60vh] overflow-y-auto pr-2">
           {#each navLinks as link}
-            <a href={link.href} class="flex items-center justify-between rounded-lg px-4 py-3 text-[15px] font-black text-slate-700 hover:bg-slate-50 hover:text-[#1f4e79]" on:click={closeMenus}>
-              {link.name}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
+            {#if link.menu}
+              <div class="flex flex-col gap-1 border-b border-slate-100 pb-3 mb-2 last:border-0 last:pb-0 last:mb-0">
+                <div class="px-4 py-2 text-[11px] font-black uppercase tracking-[0.15em] text-[#8ba2b5]">{link.name}</div>
+                {#each link.menu as item}
+                  <a href={item.href || link.href} class="group flex items-center justify-between rounded-lg px-4 py-2.5 text-[14px] font-bold text-slate-600 hover:bg-slate-50 hover:text-[#1f4e79]" on:click={closeMenus}>
+                    {item.title}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-[#00c6ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                {/each}
+              </div>
+            {:else}
+              <a href={link.href} class="flex items-center justify-between rounded-lg px-4 py-3 text-[15px] font-black text-slate-700 hover:bg-slate-50 hover:text-[#1f4e79]" on:click={closeMenus}>
+                {link.name}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            {/if}
           {/each}
         </div>
       </div>
