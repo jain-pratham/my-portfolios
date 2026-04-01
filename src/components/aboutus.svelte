@@ -1,4 +1,4 @@
-<section id="about" class="py-24 bg-white relative overflow-hidden">
+﻿<section id="about" class="py-24 bg-white relative overflow-hidden">
   <div class="container mx-auto px-6">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
       

@@ -65,9 +65,12 @@
     <div class="mt-12 flex justify-center">
       <a
         href="#contact"
-        class="inline-flex items-center rounded-full bg-gradient-to-r from-[#454a9f] to-[#5eaed4] px-12 py-4 text-2xl font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+        class="inline-flex items-center gap-2 rounded-2xl border border-[#1f4e79]/20 bg-white px-7 py-3 text-base font-bold tracking-wide text-[#1f4e79] shadow-[0_10px_24px_rgba(31,78,121,0.12)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#1f4e79]/35 hover:bg-[#1f4e79] hover:text-white hover:shadow-[0_14px_28px_rgba(31,78,121,0.2)]"
       >
         Browse Our Portfolio
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
       </a>
     </div>
   </div>

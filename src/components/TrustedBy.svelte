@@ -9,25 +9,25 @@
   </div>
 
   <div class="relative flex overflow-x-hidden group">
-    <div class="flex animate-marquee whitespace-nowrap items-center gap-12 md:gap-24 px-10">
+    <div class="flex animate-marquee whitespace-nowrap items-center gap-10 md:gap-16 px-8">
       {#each Array(6) as _, i}
-        <div class="flex items-center justify-center w-36 md:w-44 h-16 md:h-20 opacity-95 hover:opacity-100 hover:scale-105 transition-all duration-500 cursor-pointer">
+        <div class="flex items-center justify-center w-44 md:w-56 h-20 md:h-24 px-5 rounded-xl hover:bg-slate-50/70 hover:scale-105 transition-all duration-500 cursor-pointer">
           <img 
             src="/logos/partner-{i + 1}.png" 
             alt="Partner {i + 1}" 
-            class="max-w-full max-h-full object-contain drop-shadow-sm"
+            class="max-w-full max-h-full object-contain contrast-125 saturate-125 brightness-110"
           />
         </div>
       {/each}
     </div>
 
-    <div class="absolute top-0 flex animate-marquee2 whitespace-nowrap items-center gap-12 md:gap-24 px-10" aria-hidden="true">
+    <div class="absolute top-0 flex animate-marquee2 whitespace-nowrap items-center gap-10 md:gap-16 px-8" aria-hidden="true">
       {#each Array(6) as _, i}
-        <div class="flex items-center justify-center w-36 md:w-44 h-16 md:h-20 opacity-95 hover:opacity-100 hover:scale-105 transition-all duration-500 cursor-pointer">
+        <div class="flex items-center justify-center w-44 md:w-56 h-20 md:h-24 px-5 rounded-xl hover:bg-slate-50/70 hover:scale-105 transition-all duration-500 cursor-pointer">
           <img 
             src="/logos/partner-{i + 1}.png" 
             alt="Partner {i + 1}" 
-            class="max-w-full max-h-full object-contain drop-shadow-sm"
+            class="max-w-full max-h-full object-contain contrast-125 saturate-125 brightness-110"
           />
         </div>
       {/each}
