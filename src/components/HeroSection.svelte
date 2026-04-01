@@ -1,4 +1,4 @@
-﻿<script>
+<script>
   // Carousel Data with added 'features' for the right side content
   const slides = [
     {

@@ -1,0 +1,81 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import ServicePage from '../../components/services/ServicePage.astro';
+
+const pageData = {
+  eyebrow: 'Services',
+  title: 'App Development',
+  subtitle: 'Mobile applications engineered for performance, release stability, and platform-specific user experience quality.',
+  overview:
+    'Execution includes architecture planning, mobile-focused performance optimization, and production operations support. Solutions are built to scale from initial launch to high-usage scenarios while preserving reliability and maintainable code structure.',
+  highlights: [
+    'Native and cross-platform engineering with clear architectural boundaries',
+    'Mobile backend integration with secure authentication and data flows',
+    'Crash-resilient builds with QA across devices and OS versions',
+    'Instrumentation for user behavior, performance, and release analytics',
+    'App store release workflows with CI/CD and controlled rollout strategies'
+  ],
+  process: [
+    {
+      title: 'Product and Architecture Planning',
+      description: 'Feature sets are prioritized into a roadmap with technical architecture aligned to scale targets.'
+    },
+    {
+      title: 'Implementation Sprints',
+      description: 'Core features are delivered incrementally with strict code quality and platform guidelines.'
+    },
+    {
+      title: 'Quality and Hardening',
+      description: 'Performance, device compatibility, and failure scenarios are validated prior to release.'
+    },
+    {
+      title: 'Launch Operations',
+      description: 'Store deployment, telemetry, and post-release optimization ensure reliable growth.'
+    }
+  ],
+  techStack: [
+    { category: 'Frontend / Mobile', items: ['Flutter', 'React Native', 'Kotlin', 'Swift'] },
+    { category: 'Backend', items: ['Node.js', 'Firebase'] },
+    { category: 'Database', items: ['Firebase Firestore', 'MongoDB'] },
+    { category: 'Deployment', items: ['Google Play Console', 'App Store', 'CI/CD'] }
+  ],
+  architecture: [
+    {
+      title: 'Modular Architecture',
+      description: 'Feature modules isolate business logic and simplify iterative releases.'
+    },
+    {
+      title: 'API-First Design',
+      description: 'Consistent contracts between mobile clients and backend services reduce integration risk.'
+    },
+    {
+      title: 'Performance Optimization',
+      description: 'Rendering efficiency, payload reduction, and startup profiling improve app responsiveness.'
+    },
+    {
+      title: 'Security Best Practices',
+      description: 'Secure token handling, transport encryption, and access controls protect user data.'
+    },
+    {
+      title: 'Scalable Infrastructure',
+      description: 'Backend and notification systems are prepared for growth in active user volume.'
+    }
+  ],
+  outcomes: [
+    { title: 'Release Stability', description: 'Improved QA discipline lowers production crash rates.' },
+    { title: 'Responsive UX', description: 'Performance-focused engineering keeps mobile interactions smooth.' },
+    { title: 'Faster Iteration', description: 'Modular code enables faster updates with lower regression risk.' },
+    { title: 'Growth Readiness', description: 'Scalable backend integration supports increasing user demand.' }
+  ]
+};
+---
+
+<MainLayout title="App Development | Core4ix">
+  <Navbar client:load />
+  <main class="pt-24">
+    <ServicePage {...pageData} />
+  </main>
+  <Footer />
+</MainLayout>

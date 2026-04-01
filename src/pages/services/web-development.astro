@@ -1,0 +1,108 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import ServicePage from '../../components/services/ServicePage.astro';
+
+const pageData = {
+  eyebrow: 'Services',
+  title: 'Web Development',
+  subtitle: 'Engineered web platforms built for high throughput, fast rendering, and long-term maintainability across product lifecycles.',
+  overview:
+    'Delivery focuses on production-grade web systems with resilient backend services, optimized frontend architecture, and measurable performance standards. Every implementation is structured to scale with traffic, feature velocity, and evolving business requirements.',
+  highlights: [
+    'Component-driven frontend architecture with strict typing',
+    'Backend services designed for reliability and horizontal scaling',
+    'Performance budgeting for Core Web Vitals and runtime efficiency',
+    'Robust integration layer for CMS, third-party APIs, and internal systems',
+    'Testable codebases with clear deployment and observability standards'
+  ],
+  process: [
+    {
+      title: 'System Discovery',
+      description: 'Requirements are translated into domain boundaries, service contracts, and delivery milestones.'
+    },
+    {
+      title: 'Engineering Implementation',
+      description: 'Frontend and backend layers are built with modular patterns that simplify extension and maintenance.'
+    },
+    {
+      title: 'Performance and Reliability Validation',
+      description: 'Load behavior, rendering performance, and integration stability are validated before release.'
+    },
+    {
+      title: 'Release and Iteration',
+      description: 'Production rollout includes monitoring hooks and a roadmap-ready foundation for future features.'
+    }
+  ],
+  techStack: [
+    { category: 'Frontend', items: ['React', 'Next.js', 'Svelte', 'Vue', 'Tailwind CSS', 'TypeScript'] },
+    { category: 'Backend', items: ['Node.js', 'Express', 'NestJS'] },
+    { category: 'Database', items: ['MongoDB', 'PostgreSQL', 'Redis'] },
+    { category: 'DevOps & Deployment', items: ['Vercel', 'AWS', 'Docker', 'Nginx'] }
+  ],
+  useCases: [
+    { title: 'SaaS Platforms', description: 'Multi-tenant web products with secure account flows and subscription-ready foundations.' },
+    { title: 'Admin Dashboards', description: 'Operational control panels for analytics, workflows, and real-time decision support.' },
+    { title: 'E-commerce Systems', description: 'High-availability storefronts with conversion-focused UX and stable checkout pipelines.' },
+    { title: 'Internal Business Tools', description: 'Custom systems that automate internal workflows and reduce manual process overhead.' },
+    { title: 'Marketing Websites', description: 'Performance-optimized sites engineered for discoverability, lead generation, and brand trust.' }
+  ],
+  capabilities: [
+    'High-performance dashboards',
+    'SEO-optimized web platforms',
+    'API-integrated systems',
+    'Scalable backend architectures',
+    'Secure authentication systems'
+  ],
+  engagementModels: [
+    { title: 'Fixed Scope Projects', description: 'Clearly defined milestones, timelines, and deliverables for focused execution.' },
+    { title: 'Dedicated Development', description: 'A committed engineering pod aligned to your product roadmap and sprint cadence.' },
+    { title: 'Ongoing Support & Scaling', description: 'Continuous optimization, maintenance, and architecture evolution after launch.' }
+  ],
+  architecture: [
+    {
+      title: 'Modular Architecture',
+      description: 'Domain-oriented modules and reusable components reduce coupling and speed up feature delivery.'
+    },
+    {
+      title: 'API-First Design',
+      description: 'Clear contracts and versioned endpoints keep frontend, backend, and integrations aligned.'
+    },
+    {
+      title: 'Performance Optimization',
+      description: 'Caching, code splitting, and render strategy tuning are applied to keep latency predictable.'
+    },
+    {
+      title: 'Security Best Practices',
+      description: 'Secure authentication flows, input validation, and hardening controls are implemented by default.'
+    },
+    {
+      title: 'Scalable Infrastructure',
+      description: 'Deployments are structured for autoscaling, fault tolerance, and controlled operational cost.'
+    }
+  ],
+  outcomes: [
+    { title: 'Lower Latency', description: 'Optimized delivery paths reduce response times and improve UX consistency.' },
+    { title: 'Higher Throughput', description: 'Scalable service design handles growth without disruptive rewrites.' },
+    { title: 'Maintainable Code', description: 'Well-structured modules improve onboarding and release speed.' },
+    { title: 'Operational Confidence', description: 'Monitoring-ready systems reduce risk in production environments.' }
+  ],
+  cta: {
+    title: 'Ready to Build Something Scalable?',
+    subtitle: 'Discuss your requirements and get a clear execution roadmap.',
+    primaryLabel: 'Start Your Project',
+    secondaryLabel: 'Contact Us',
+    primaryHref: '#contact',
+    secondaryHref: '#contact'
+  }
+};
+---
+
+<MainLayout title="Web Development | Core4ix">
+  <Navbar client:load />
+  <main class="pt-24">
+    <ServicePage {...pageData} />
+  </main>
+  <Footer />
+</MainLayout>

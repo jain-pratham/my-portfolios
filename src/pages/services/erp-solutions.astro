@@ -1,0 +1,82 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import ServicePage from '../../components/services/ServicePage.astro';
+
+const pageData = {
+  eyebrow: 'Services',
+  title: 'ERP Solutions',
+  subtitle: 'ERP systems engineered to unify business operations with reliable data flows and scalable process automation.',
+  overview:
+    'Delivery modernizes fragmented operational stacks into integrated ERP ecosystems across finance, procurement, inventory, and reporting. Implementations are designed for governance, maintainability, and reliable cross-functional execution.',
+  highlights: [
+    'Process-centric ERP module design aligned to operational workflows',
+    'Migration architecture with data integrity validation and reconciliation controls',
+    'Automation of approvals, task routing, and exception handling paths',
+    'Role-based access models with compliance-focused auditability',
+    'Operational reporting architecture for real-time decision support'
+  ],
+  process: [
+    {
+      title: 'Operational Blueprinting',
+      description: 'Business processes are mapped into standardized ERP workflows and service boundaries.'
+    },
+    {
+      title: 'Configuration and Custom Engineering',
+      description: 'Core modules are configured and extended where domain-specific logic is required.'
+    },
+    {
+      title: 'Data Migration and Validation',
+      description: 'Migration pipelines and verification checkpoints ensure trusted historical and live data.'
+    },
+    {
+      title: 'Rollout and Stabilization',
+      description: 'Phased go-live with observability and support safeguards drives stable adoption.'
+    }
+  ],
+  techStack: [
+    { category: 'Frontend', items: ['React', 'Next.js'] },
+    { category: 'Backend', items: ['Node.js', 'Express'] },
+    { category: 'Database', items: ['PostgreSQL', 'MongoDB'] },
+    { category: 'Architecture', items: ['REST APIs', 'Microservices'] },
+    { category: 'DevOps', items: ['Docker', 'AWS'] }
+  ],
+  architecture: [
+    {
+      title: 'Modular Architecture',
+      description: 'Domain modules separate finance, operations, and reporting concerns for cleaner scaling.'
+    },
+    {
+      title: 'API-First Design',
+      description: 'Standardized APIs simplify ERP integration with external and legacy systems.'
+    },
+    {
+      title: 'Performance Optimization',
+      description: 'Query optimization and workload partitioning keep reporting and workflows responsive.'
+    },
+    {
+      title: 'Security Best Practices',
+      description: 'Role-based controls and audit trails reinforce governance and compliance posture.'
+    },
+    {
+      title: 'Scalable Infrastructure',
+      description: 'Service architecture and deployment patterns support growth in users and transactions.'
+    }
+  ],
+  outcomes: [
+    { title: 'Unified Operations', description: 'Cross-team processes operate from a consistent system backbone.' },
+    { title: 'Data Integrity', description: 'Controlled migration and validation improve reporting trust.' },
+    { title: 'Process Velocity', description: 'Automation shortens cycle times and reduces manual dependencies.' },
+    { title: 'Governed Scale', description: 'Secure architecture supports expansion without losing control.' }
+  ]
+};
+---
+
+<MainLayout title="ERP Solutions | Core4ix">
+  <Navbar client:load />
+  <main class="pt-24">
+    <ServicePage {...pageData} />
+  </main>
+  <Footer />
+</MainLayout>
