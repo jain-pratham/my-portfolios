@@ -1,0 +1,82 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import ServicePage from '../../components/services/ServicePage.astro';
+
+const pageData = {
+  eyebrow: 'Services',
+  title: 'Cloud Services',
+  subtitle: 'Cloud architectures engineered for resilience, secure operations, and predictable performance at scale.',
+  overview:
+    'Cloud delivery covers platform architecture, migration orchestration, and infrastructure automation across production workloads. Implementations are optimized for reliability, governance, and cost-aware scalability under real operational pressure.',
+  highlights: [
+    'Cloud-native architecture design aligned to workload behavior',
+    'Infrastructure as Code for repeatable and controlled environment provisioning',
+    'Containerized deployments with release automation and rollback safety',
+    'Observability and monitoring pipelines for proactive operational response',
+    'Security hardening and governance controls across services and access layers'
+  ],
+  process: [
+    {
+      title: 'Cloud Assessment',
+      description: 'Current-state systems are evaluated for migration readiness and target architecture design.'
+    },
+    {
+      title: 'Migration and Modernization',
+      description: 'Workloads are transitioned in phases with service continuity and rollback planning.'
+    },
+    {
+      title: 'Automation and Reliability',
+      description: 'CI/CD, infrastructure provisioning, and operational policies are automated end-to-end.'
+    },
+    {
+      title: 'Optimization and Governance',
+      description: 'Performance, cost, and security posture are continuously tuned post-deployment.'
+    }
+  ],
+  techStack: [
+    { category: 'Cloud Platforms', items: ['AWS', 'Vercel'] },
+    { category: 'Containerization', items: ['Docker', 'Kubernetes'] },
+    { category: 'CI/CD', items: ['GitHub Actions', 'CI/CD Pipelines'] },
+    { category: 'Monitoring', items: ['CloudWatch', 'Logging Systems'] },
+    { category: 'Networking', items: ['Nginx', 'Load Balancers'] }
+  ],
+  architecture: [
+    {
+      title: 'Modular Architecture',
+      description: 'Service decomposition and infrastructure modules keep deployments maintainable.'
+    },
+    {
+      title: 'API-First Design',
+      description: 'Service contracts support clean interoperability across distributed systems.'
+    },
+    {
+      title: 'Performance Optimization',
+      description: 'Autoscaling, caching, and resource profiling maintain predictable throughput.'
+    },
+    {
+      title: 'Security Best Practices',
+      description: 'Least-privilege access, secure networking, and policy controls protect workloads.'
+    },
+    {
+      title: 'Scalable Infrastructure',
+      description: 'Cloud topology is engineered for availability, elasticity, and efficient expansion.'
+    }
+  ],
+  outcomes: [
+    { title: 'Higher Resilience', description: 'Cloud workloads sustain failures with minimal service disruption.' },
+    { title: 'Faster Delivery', description: 'Automation reduces release bottlenecks and operational toil.' },
+    { title: 'Stronger Security', description: 'Hardened infrastructure lowers exposure across cloud surfaces.' },
+    { title: 'Cost-Aware Scale', description: 'Resource governance aligns performance targets with spend control.' }
+  ]
+};
+---
+
+<MainLayout title="Cloud Services | Core4ix">
+  <Navbar client:load />
+  <main class="pt-24">
+    <ServicePage {...pageData} />
+  </main>
+  <Footer />
+</MainLayout>

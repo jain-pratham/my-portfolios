@@ -1,0 +1,82 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import ServicePage from '../../components/services/ServicePage.astro';
+
+const pageData = {
+  eyebrow: 'Services',
+  title: 'E-Commerce Development',
+  subtitle: 'Commerce platforms engineered for conversion velocity, transaction reliability, and scalable product operations.',
+  overview:
+    'Solutions combine storefront performance, secure payment integration, and robust backend orchestration for catalog, orders, and fulfillment. Engineering decisions prioritize uptime, conversion efficiency, and sustainable long-term extensibility.',
+  highlights: [
+    'High-performance storefront architecture with optimized rendering paths',
+    'Secure checkout workflows with resilient payment gateway integrations',
+    'Structured catalog and inventory models for growing product lines',
+    'Operational integrations across ERP, CRM, shipping, and marketing systems',
+    'Analytics-ready foundation for conversion and retention optimization'
+  ],
+  process: [
+    {
+      title: 'Commerce System Design',
+      description: 'Funnel stages, operational dependencies, and integration contracts are defined upfront.'
+    },
+    {
+      title: 'Storefront and Backend Engineering',
+      description: 'Frontend and service layers are built to balance speed, flexibility, and transaction safety.'
+    },
+    {
+      title: 'Payment and Operations Integration',
+      description: 'Payments, fulfillment, and business tools are connected with reliability safeguards.'
+    },
+    {
+      title: 'Optimization and Scale',
+      description: 'Post-launch tuning improves conversion rates, average order value, and platform stability.'
+    }
+  ],
+  techStack: [
+    { category: 'Frontend', items: ['Next.js', 'React', 'Tailwind CSS'] },
+    { category: 'Backend', items: ['Node.js', 'Express'] },
+    { category: 'Platform', items: ['Shopify', 'WooCommerce'] },
+    { category: 'Payments', items: ['Stripe', 'Razorpay'] },
+    { category: 'Database', items: ['MongoDB', 'PostgreSQL'] }
+  ],
+  architecture: [
+    {
+      title: 'Modular Architecture',
+      description: 'Composable storefront and service modules support rapid feature expansion.'
+    },
+    {
+      title: 'API-First Design',
+      description: 'Unified APIs keep storefront, checkout, and operations systems synchronized.'
+    },
+    {
+      title: 'Performance Optimization',
+      description: 'Caching, image strategy, and route optimization protect conversion-critical speed.'
+    },
+    {
+      title: 'Security Best Practices',
+      description: 'Payment data handling, access control, and validation layers reduce transaction risk.'
+    },
+    {
+      title: 'Scalable Infrastructure',
+      description: 'Infrastructure is prepared for campaign spikes and sustained order growth.'
+    }
+  ],
+  outcomes: [
+    { title: 'Higher Conversion', description: 'Checkout and storefront tuning improve purchase completion rates.' },
+    { title: 'Transaction Reliability', description: 'Resilient payment integration reduces failed purchase events.' },
+    { title: 'Operational Efficiency', description: 'Integrated workflows minimize manual order-handling overhead.' },
+    { title: 'Scalable Growth', description: 'Architecture supports expansion in products, traffic, and regions.' }
+  ]
+};
+---
+
+<MainLayout title="E-Commerce | Core4ix">
+  <Navbar client:load />
+  <main class="pt-24">
+    <ServicePage {...pageData} />
+  </main>
+  <Footer />
+</MainLayout>
