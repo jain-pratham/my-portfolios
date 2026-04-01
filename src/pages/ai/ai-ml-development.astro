@@ -1,0 +1,14 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import AiMlDevelopmentComponent from '../../components/AiMlDevelopment/AiMlDevelopment.svelte';
+---
+
+<MainLayout title="AI & ML Development | Core4ix">
+  <Navbar client:load />
+  <div class="pt-0 md:pt-0">
+    <AiMlDevelopmentComponent client:load />
+  </div>
+  <Footer client:load />
+</MainLayout>

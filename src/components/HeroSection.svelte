@@ -71,7 +71,7 @@
   <div class="absolute bottom-0 left-0 h-[600px] w-[600px] -translate-x-1/4 translate-y-1/4 rounded-full bg-[#f1f5f9] opacity-80 blur-[100px] z-0"></div>
 
   <div class="absolute left-4 top-1/2 -translate-y-1/2 z-30 md:left-8">
-    <button aria-label="Previous slide" on:click={prevSlide} class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#1f4e79] shadow-lg border border-slate-200 transition-all hover:bg-[#1f4e79] hover:text-white active:scale-95">
+    <button on:click={prevSlide} class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#1f4e79] shadow-lg border border-slate-200 transition-all hover:bg-[#1f4e79] hover:text-white active:scale-95">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
       </svg>
@@ -79,7 +79,7 @@
   </div>
   
   <div class="absolute right-4 top-1/2 -translate-y-1/2 z-30 md:right-8">
-    <button aria-label="Next slide" on:click={nextSlide} class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#1f4e79] shadow-lg border border-slate-200 transition-all hover:bg-[#1f4e79] hover:text-white active:scale-95">
+    <button on:click={nextSlide} class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#1f4e79] shadow-lg border border-slate-200 transition-all hover:bg-[#1f4e79] hover:text-white active:scale-95">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
       </svg>
@@ -180,4 +180,3 @@
 
   </div>
 </main>
-
