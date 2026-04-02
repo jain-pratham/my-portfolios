@@ -1,43 +1,27 @@
 <script>
   import { onMount } from 'svelte';
+  import { fly, fade } from 'svelte/transition';
 
   let isScrolled = false;
   let mobileMenuOpen = false;
+  let activeMegaMenu = null;
   let navShell;
+  let closeTimeout;
 
   const navLinks = [
     {
-    name: 'Services',
-    menu: [
-      { 
-        title: 'Web Development', 
-        detail: 'Modern websites and web apps',
-        href: '/services/web-development'
-      },
-      { 
-        title: 'App Development', 
-        detail: 'Android and iOS solutions',
-        href: '/services/app-development'
-      },
-      { 
-        title: 'E-Commerce', 
-        detail: 'Conversion-focused storefronts',
-        href: '/services/ecommerce'
-      },
-      { 
-        title: 'ERP Solutions', 
-        detail: 'Business process automation',
-        href: '/services/erp-solutions'
-      },
-      { 
-        title: 'Cloud Services', 
-        detail: 'Scalable cloud architecture',
-        href: '/services/cloud-services'
-      }
-    ]
-  },
+      name: 'Services',
+      href: '#solutions',
+      menu: [
+        { title: 'Web Development', detail: 'Modern websites and web apps', href: '/services/web-development' },
+        { title: 'App Development', detail: 'Android and iOS solutions', href: '/services/app-development' },
+        { title: 'E-Commerce', detail: 'Conversion-focused storefronts', href: '/services/ecommerce' },
+        { title: 'ERP Solutions', detail: 'Business process automation', href: '/services/erp-solutions' },
+        { title: 'Cloud Services', detail: 'Scalable cloud architecture', href: '/services/cloud-services' }
+      ]
+    },
     {
-      name: 'TECHNOLOGIES',
+      name: 'Technologies',
       href: '#technologies',
       menu: [
         { title: 'Frontend Stack', detail: 'React, Next.js, Vue, Svelte' },
@@ -49,21 +33,36 @@
     },
     {
       name: 'AI',
-      href: '#',
+      href: '#services',
       menu: [
-        { title: 'AI Consultancy', href: '/ai/ai-consultancy', detail: 'Strategic AI planning and roadmap' },
-        { title: 'AI Integration', href: '/ai/ai-integration', detail: 'Seamless deployment of AI tools' },
-        { title: 'AI/ML Development', href: '/ai/ai-ml-development', detail: 'Custom models and algorithms' },
-        { title: 'AI Agent Development', href: '/ai/ai-agent-development', detail: 'Autonomous intelligent agents' },
-        { title: 'Generative AI', href: '/ai/generative-ai', detail: 'Content and creative AI solutions' }
+        { title: 'AI Consultancy', detail: 'Strategic AI planning and roadmap', href: '/ai/ai-consultancy' },
+        { title: 'AI Integration', detail: 'Seamless deployment of AI tools', href: '/ai/ai-integration' },
+        { title: 'AI/ML Development', detail: 'Custom models and algorithms', href: '/ai/ai-ml-development' },
+        { title: 'AI Agent Development', detail: 'Autonomous intelligent agents', href: '/ai/ai-agent-development' },
+        { title: 'Generative AI', detail: 'Content and creative AI solutions', href: '/ai/generative-ai' }
       ]
     },
-    { name: 'INDUSTRIES', href: '#industries' },
-    { name: 'PORTFOLIO', href: '#projects' },
+    { name: 'Industries', href: '#industries' },
+    { name: 'Portfolio', href: '#projects' },
   ];
+
+  $: activeMenuConfig = navLinks.find((item) => item.name === activeMegaMenu);
 
   function closeMenus() {
     mobileMenuOpen = false;
+    activeMegaMenu = null;
+  }
+
+  // Smooth Hover Logic
+  function handleMouseEnter(name) {
+    if (closeTimeout) clearTimeout(closeTimeout);
+    activeMegaMenu = name;
+  }
+
+  function handleMouseLeave() {
+    closeTimeout = setTimeout(() => {
+      activeMegaMenu = null;
+    }, 150); // Small delay so it doesn't flicker
   }
 
   onMount(() => {
@@ -72,16 +71,12 @@
     };
 
     const handleDocClick = (event) => {
-      if (!navShell || navShell.contains(event.target)) {
-        return;
-      }
+      if (!navShell || navShell.contains(event.target)) return;
       closeMenus();
     };
 
     const handleEscape = (event) => {
-      if (event.key === 'Escape') {
-        closeMenus();
-      }
+      if (event.key === 'Escape') closeMenus();
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -96,160 +91,126 @@
   });
 </script>
 
-<nav class="fixed left-0 top-0 z-120 w-full transition-all duration-500 {isScrolled ? 'py-3' : 'py-6'}">
-  <div bind:this={navShell} class="container mx-auto px-4 sm:px-6 max-w-[1400px]">
+<nav class="fixed left-0 top-0 z-[120] w-full transition-all duration-300 {isScrolled ? 'py-2' : 'py-4'}">
+  <div bind:this={navShell} class="container mx-auto px-4 sm:px-6" on:mouseleave={handleMouseLeave}>
     
-    <div class="relative flex items-center justify-between rounded-xl border border-slate-200/60 bg-white/95 px-5 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-2xl transition-all duration-300 md:px-8 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+    <div class="relative flex items-center justify-between rounded-2xl border border-slate-200/60 bg-white/90 px-4 py-2 shadow-lg shadow-blue-900/5 backdrop-blur-xl md:px-6">
       
-      <a href="#top" class="group flex items-center gap-3 shrink-0" on:click={closeMenus}>
-        <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-slate-50 border border-slate-100/50">
+      <a href="#top" class="group flex items-center gap-3" on:click={closeMenus}>
+        <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl">
           <img
             src="/logo1.png"
             alt="CORE4IX Logo"
-            class="h-full w-full translate-y-[3px] scale-[1.5] object-cover transition-transform duration-500 group-hover:scale-[1.6]"
+            class="h-full w-full translate-y-[5px] scale-[1.6] object-cover transition-transform duration-300 group-hover:scale-[1.7]"
           />
         </div>
         <div class="hidden sm:flex flex-col">
-          <span class="leading-none text-[22px] font-black tracking-tighter text-[#1f4e79]">
+          <span class="leading-none text-xl font-black tracking-tighter text-[#1f4e79]">
             CORE<span class="text-[#00c6ff]">4</span>IX
           </span>
-          <span class="mt-1 text-[9px] font-bold uppercase tracking-[0.25em] text-slate-400">Tech Studio</span>
+          <span class="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Tech Studio</span>
         </div>
       </a>
 
-      <div class="hidden xl:flex items-center gap-8">
+      <div class="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 xl:flex items-center gap-7">
         {#each navLinks as link}
-          <div class="group relative flex items-center h-full">
-            {#if link.menu}
-              <a href={link.href} class="flex items-center gap-1.5 py-4 text-[12px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:text-[#1f4e79]">
-                {link.name}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-[#00c6ff] transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-              </a>
-
-              <div class="absolute left-1/2 top-full -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-3 group-hover:translate-y-0 z-50 cursor-default">
-                
-                <div class="w-[800px] rounded-2xl border border-slate-100 bg-white shadow-[0_25px_50px_-12px_rgba(31,78,121,0.2)] overflow-hidden">
-                  <div class="grid grid-cols-[1.4fr_0.9fr] min-h-[380px]">
-                    
-                    <div class="p-10">
-                      <div class="mb-8 flex items-center gap-3">
-                        <div class="h-2 w-2 rounded-full bg-[#00c6ff]"></div>
-                        <h4 class="text-[11px] font-bold uppercase tracking-[0.15em] text-[#8ba2b5]">{link.name} CAPABILITIES</h4>
-                      </div>
-
-                      <div class="grid grid-cols-2 gap-x-8 gap-y-8">
-                        {#each link.menu as item}
-                          <a href={item.href || link.href} class="group/item flex items-start gap-4 transition-all duration-300" on:click={closeMenus}>
-                            <div class="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm text-[#1f4e79] transition-all duration-300 group-hover/item:border-[#00c6ff] group-hover/item:text-[#00c6ff]">
-                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p class="text-[14px] font-black text-slate-800 transition-colors group-hover/item:text-[#1f4e79]">
-                                {item.title}
-                              </p>
-                              <p class="mt-1 text-[13px] leading-[1.4] text-[#8ba2b5]">{item.detail}</p>
-                            </div>
-                          </a>
-                        {/each}
-                      </div>
-                    </div>
-
-                    <div class="bg-[#1f4e79] p-10 flex flex-col">
-                      <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-[#00c6ff] mb-6">PORTFOLIO SPOTLIGHT</p>
-                      
-                      <h3 class="text-[32px] font-black leading-[1.1] text-white tracking-tight">
-                        Smart Tech,<br/>Smarter Results.
-                      </h3>
-                      
-                      <p class="mt-5 text-[14px] leading-relaxed text-[#a8c1d8]">
-                        Build scalable, secure, and future-ready products with CORE4IX enterprise-grade engineering expertise.
-                      </p>
-
-                      <div class="mt-auto pt-8">
-                        <a href="#contact" class="inline-flex items-center gap-2 rounded-full bg-[#00c6ff] px-6 py-3.5 text-[14px] font-bold text-[#1f4e79] transition-all hover:bg-white hover:shadow-[0_0_20px_rgba(0,198,255,0.4)]" on:click={closeMenus}>
-                          Start a Project
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                          </svg>
-                        </a>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            {:else}
-              <a href={link.href} class="group relative flex items-center py-4 text-[12px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:text-[#1f4e79]" on:click={closeMenus}>
-                {link.name}
-                <span class="absolute bottom-2 left-1/2 -translate-x-1/2 h-[2px] w-0 rounded-full bg-[#00c6ff] transition-all duration-300 group-hover:w-[15px]"></span>
-              </a>
-            {/if}
-          </div>
+          {#if link.menu}
+            <button
+              type="button"
+              on:mouseenter={() => handleMouseEnter(link.name)}
+              class="group flex items-center gap-1 py-4 text-sm font-bold transition-colors {activeMegaMenu === link.name ? 'text-[#1f4e79]' : 'text-slate-600 hover:text-[#1f4e79]'}"
+            >
+              {link.name}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform duration-300 {activeMegaMenu === link.name ? 'rotate-180' : ''}" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          {:else}
+            <a href={link.href} class="group relative py-4 text-sm font-bold text-slate-600 transition-colors hover:text-[#1f4e79]" on:click={closeMenus}>
+              {link.name}
+              <span class="absolute bottom-3 left-0 h-0.5 w-0 bg-[#00c6ff] transition-all group-hover:w-full"></span>
+            </a>
+          {/if}
         {/each}
       </div>
 
-      <div class="hidden md:flex items-center gap-5 shrink-0">
-        <div class="text-right hidden lg:block">
-          <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Ready to build?</p>
-          <a href="tel:+919909388561" class="text-[15px] font-black tracking-tight text-[#1f4e79] hover:text-[#00c6ff] transition-colors">+91 99093 88561</a>
-        </div>
-        
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <a href="#contact" class="flex h-[42px] w-[42px] items-center justify-center rounded-xl bg-slate-900 text-white transition-all hover:bg-[#1f4e79] hover:shadow-lg hover:-translate-y-0.5">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.9 1.37l1.09 3.27a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.59 6.59l1.27-1.27a2 2 0 012.11-.45l3.27 1.09A2 2 0 0121 17.72V21a2 2 0 01-2 2h-1C9.16 23 1 14.84 1 5V5z" />
-          </svg>
+      <div class="hidden md:flex items-stretch overflow-hidden rounded-xl border border-slate-300 bg-[#eef2f4]">
+        <a href="tel:+919909388561" class="flex items-center gap-2 px-3 py-1.5 lg:px-3.5">
+          <div class="flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-[#1f4e79]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.9 1.37l1.09 3.27a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.59 6.59l1.27-1.27a2 2 0 012.11-.45l3.27 1.09A2 2 0 0121 17.72V21a2 2 0 01-2 2h-1C9.16 23 1 14.84 1 5V5z" />
+            </svg>
+          </div>
+          <div class="leading-tight">
+            <p class="text-[9px] font-bold text-slate-500">Any Question</p>
+            <p class="text-sm font-black tracking-tight text-[#1f2937] lg:text-base">+91 99093 88561</p>
+          </div>
         </a>
       </div>
 
       <button
         type="button"
-        class="md:hidden p-2 text-[#1f4e79]"
-        aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-        aria-expanded={mobileMenuOpen}
+        class="md:hidden p-2"
         on:click={() => (mobileMenuOpen = !mobileMenuOpen)}
       >
-        <div class="mb-1.5 h-[2px] w-6 bg-current transition-all duration-300 {mobileMenuOpen ? 'translate-y-2 rotate-45' : ''}"></div>
-        <div class="mb-1.5 h-[2px] w-6 bg-current transition-all duration-300 {mobileMenuOpen ? 'opacity-0' : ''}"></div>
-        <div class="h-[2px] w-6 bg-current transition-all duration-300 {mobileMenuOpen ? '-translate-y-2 -rotate-45' : ''}"></div>
+        <div class="mb-1.5 h-0.5 w-6 bg-[#1f4e79] transition-all {mobileMenuOpen ? 'translate-y-2 rotate-45' : ''}"></div>
+        <div class="mb-1.5 h-0.5 w-6 bg-[#1f4e79] {mobileMenuOpen ? 'opacity-0' : ''}"></div>
+        <div class="h-0.5 w-6 bg-[#1f4e79] transition-all {mobileMenuOpen ? '-translate-y-2 -rotate-45' : ''}"></div>
       </button>
     </div>
 
-    {#if mobileMenuOpen}
-      <div class="absolute left-4 right-4 top-24 rounded-2xl border border-slate-100 bg-white/95 backdrop-blur-xl p-6 shadow-2xl md:hidden">
-        <div class="mb-8 rounded-xl bg-[#1f4e79] p-6 text-white">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#00c6ff]">Start your project</p>
-          <p class="mt-1 text-2xl font-black">+91 99093 88561</p>
-          <a href="tel:+919909388561" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#00c6ff] px-5 py-2.5 text-xs font-bold text-[#1f4e79]">Call Now</a>
-        </div>
+    {#if activeMenuConfig?.menu}
+      <div 
+        on:mouseenter={() => handleMouseEnter(activeMegaMenu)}
+        transition:fly={{ y: 10, duration: 300 }}
+        id="desktop-mega-menu" 
+        class="mt-3 hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl xl:block"
+      >
+        <div class="grid grid-cols-[1.4fr_1fr] gap-6">
+          <div>
+            <h4 class="text-2xl font-black tracking-tight text-[#1f4e79]">{activeMenuConfig.name}</h4>
+            <p class="mt-1 text-sm text-slate-500">Choose a focus area and we can help you ship faster.</p>
 
-        <div class="flex flex-col gap-1 max-h-[60vh] overflow-y-auto pr-2">
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              {#each activeMenuConfig.menu as item}
+                <a href={item.href || activeMenuConfig.href} class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-[#1f4e79]/20 hover:bg-white" on:click={closeMenus}>
+                  <p class="text-base font-bold text-slate-800">{item.title}</p>
+                  <p class="mt-1 text-xs text-slate-500">{item.detail}</p>
+                </a>
+              {/each}
+            </div>
+          </div>
+
+          <div class="rounded-2xl bg-gradient-to-br from-[#eff6ff] to-[#dff3ff] p-5">
+            <p class="text-sm font-black uppercase tracking-[0.14em] text-[#1f4e79]">Smart Tech, Smarter Results</p>
+            <p class="mt-3 text-lg leading-relaxed text-slate-700">
+              Build scalable, secure, and future-ready products with CORE4IX engineering expertise.
+            </p>
+            <a href="#contact" class="mt-6 inline-block rounded-xl bg-[#1f4e79] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#183b5c]" on:click={closeMenus}>Hire Now</a>
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    {#if mobileMenuOpen}
+      <div transition:fade={{ duration: 200 }} class="absolute left-6 right-6 top-24 rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl md:hidden">
+        <a href="tel:+919909388561" class="mb-5 flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-3">
+          <div class="flex h-9 w-9 items-center justify-center rounded-md bg-white text-[#1f4e79]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.9 1.37l1.09 3.27a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.59 6.59l1.27-1.27a2 2 0 012.11-.45l3.27 1.09A2 2 0 0121 17.72V21a2 2 0 01-2 2h-1C9.16 23 1 14.84 1 5V5z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-slate-500">Any Question</p>
+            <p class="text-base font-black text-[#1f2937]">+91 99093 88561</p>
+          </div>
+        </a>
+
+        <div class="flex flex-col gap-4">
           {#each navLinks as link}
-            {#if link.menu}
-              <div class="flex flex-col gap-1 border-b border-slate-100 pb-3 mb-2 last:border-0 last:pb-0 last:mb-0">
-                <div class="px-4 py-2 text-[11px] font-black uppercase tracking-[0.15em] text-[#8ba2b5]">{link.name}</div>
-                {#each link.menu as item}
-                  <a href={item.href || link.href} class="group flex items-center justify-between rounded-lg px-4 py-2.5 text-[14px] font-bold text-slate-600 hover:bg-slate-50 hover:text-[#1f4e79]" on:click={closeMenus}>
-                    {item.title}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-[#00c6ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </a>
-                {/each}
-              </div>
-            {:else}
-              <a href={link.href} class="flex items-center justify-between rounded-lg px-4 py-3 text-[15px] font-black text-slate-700 hover:bg-slate-50 hover:text-[#1f4e79]" on:click={closeMenus}>
-                {link.name}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
-            {/if}
+            <a href={link.href} class="text-lg font-bold text-slate-800" on:click={closeMenus}>{link.name}</a>
           {/each}
+          <a href="#contact" class="mt-1 rounded-xl bg-[#1f4e79] py-3 text-center font-bold text-white" on:click={closeMenus}>Contact Us</a>
         </div>
       </div>
     {/if}
