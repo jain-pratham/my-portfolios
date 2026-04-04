@@ -1,0 +1,14 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import Navbar from '../components/Navbar.svelte';
+import Footer from '../components/footer/Footer.svelte';
+import AboutUsPage from '../components/AboutUsPage.svelte';
+---
+
+<MainLayout title="About Us | Core4ix">
+  <Navbar client:load />
+  <main>
+    <AboutUsPage client:load />
+  </main>
+  <Footer />
+</MainLayout>

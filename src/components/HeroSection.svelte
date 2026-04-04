@@ -57,7 +57,11 @@
   };
 </script>
 
-<main id="top" class="relative min-h-[90vh] md:min-h-[85vh] flex flex-col justify-center overflow-hidden bg-[#f8fafc] pt-28 pb-20">
+<svelte:head>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</svelte:head>
+
+<main id="top" class="relative min-h-[90vh] md:min-h-[85vh] flex flex-col justify-center overflow-hidden bg-[#f8fafc] pt-28 pb-20 font-['Inter']">
   
   <div class="absolute inset-0 z-0 opacity-40" style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 32px 32px;"></div>
 
@@ -108,7 +112,7 @@
                   <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00c6ff] opacity-75"></span>
                   <span class="relative inline-flex h-2 w-2 rounded-full bg-[#00c6ff]"></span>
                 </span>
-                <span class="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#1f4e79]">
+                <span class="font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-[#1f4e79]">
                   {slide.secondaryText}
                 </span>
               </div>
@@ -122,7 +126,7 @@
               </p>
 
               <div class="flex items-center gap-6">
-                <a href={slide.ctaLink} class="inline-flex items-center justify-center rounded-xl bg-[#1f4e79] px-8 py-4 text-[15px] font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#00c6ff] hover:text-[#0f172a] hover:shadow-[0_15px_30px_-5px_rgba(0,198,255,0.3)]">
+                <a href={slide.ctaLink} class="inline-flex items-center justify-center rounded-xl bg-[#1f4e79] px-8 py-4 text-[14px] font-extrabold uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#00c6ff] hover:text-[#0f172a] hover:shadow-[0_15px_30px_-5px_rgba(0,198,255,0.3)]">
                   {slide.ctaText}
                 </a>
               </div>
@@ -132,7 +136,7 @@
               <div class="bg-white border border-slate-100 rounded-[2rem] p-8 lg:p-10 shadow-[0_20px_50px_-15px_rgba(31,78,121,0.1)] relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#1f4e79] to-[#00c6ff]"></div>
                 
-                <h3 class="text-sm font-bold uppercase tracking-widest text-[#00c6ff] mb-8">What We Deliver</h3>
+                <h3 class="text-xs font-bold uppercase tracking-[0.25em] text-[#00c6ff] mb-8 font-['JetBrains_Mono']">What We Deliver</h3>
                 
                 <ul class="space-y-6">
                   {#each slide.features as feature}
@@ -142,18 +146,18 @@
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <span class="text-lg font-bold text-slate-700 leading-tight">{feature}</span>
+                      <span class="text-lg font-bold text-slate-700 leading-tight tracking-tight">{feature}</span>
                     </li>
                   {/each}
                 </ul>
 
                 <div class="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between">
-                  <div>
+                  <div class="font-['JetBrains_Mono']">
                     <p class="text-2xl font-black text-[#1f4e79]">100<span class="text-[#00c6ff]">%</span></p>
                     <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Code Quality</p>
                   </div>
                   <div class="w-px h-8 bg-slate-200"></div>
-                  <div>
+                  <div class="font-['JetBrains_Mono']">
                     <p class="text-2xl font-black text-[#1f4e79]">5.0</p>
                     <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Client Rating</p>
                   </div>
@@ -180,3 +184,9 @@
 
   </div>
 </main>
+
+<style>
+  :global(body) {
+    font-family: 'Inter', sans-serif;
+  }
+</style>

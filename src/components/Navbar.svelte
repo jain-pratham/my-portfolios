@@ -10,7 +10,7 @@
 
   const navLinks = [
     {
-      name: 'Services',
+      name: 'SERVICES',
       href: '#solutions',
       menu: [
         { title: 'Web Development', detail: 'Modern websites and web apps', href: '/services/web-development' },
@@ -18,17 +18,6 @@
         { title: 'E-Commerce', detail: 'Conversion-focused storefronts', href: '/services/ecommerce' },
         { title: 'ERP Solutions', detail: 'Business process automation', href: '/services/erp-solutions' },
         { title: 'Cloud Services', detail: 'Scalable cloud architecture', href: '/services/cloud-services' }
-      ]
-    },
-    {
-      name: 'Technologies',
-      href: '#technologies',
-      menu: [
-        { title: 'Frontend Stack', detail: 'React, Next.js, Vue, Svelte' },
-        { title: 'Backend Stack', detail: 'Node.js, Python, Java, PHP' },
-        { title: 'Databases', detail: 'MySQL, PostgreSQL, MongoDB' },
-        { title: 'DevOps', detail: 'Docker, CI/CD, Vercel, AWS' },
-        { title: 'UI/UX Tools', detail: 'Figma, Framer, XD' }
       ]
     },
     {
@@ -42,8 +31,18 @@
         { title: 'Generative AI', detail: 'Content and creative AI solutions', href: '/ai/generative-ai' }
       ]
     },
-    { name: 'Industries', href: '#industries' },
-    { name: 'Portfolio', href: '#projects' },
+    
+    { name: 'ABOUT US', href: '/about-us' },
+    {
+      name: 'PRODUCTS',
+      href: '#services',
+      menu: [
+        { title: 'AI Consultancy', detail: 'Strategic AI planning and roadmap', href: '/ai/ai-consultancy' },
+        { title: 'AI Integration', detail: 'Seamless deployment of AI tools', href: '/ai/ai-integration' },
+      ]
+    },
+    { name: 'PORTFOLIO', href: '/projects' },
+    { name: 'CONTACT US', href: '/contactus' },
   ];
 
   $: activeMenuConfig = navLinks.find((item) => item.name === activeMegaMenu);

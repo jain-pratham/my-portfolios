@@ -1,2 +1,7 @@
 @config "../../tailwind.config.js";
 @import "tailwindcss";
+
+:global(body) {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.01em;
+}
