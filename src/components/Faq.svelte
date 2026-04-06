@@ -1,36 +1,36 @@
-﻿<script>
+<script>
   const faqs = [
     {
-      q: 'What services does CORE4IX provide?',
-      a: 'We provide software engineering, web development, cloud solutions, AI integrations, cybersecurity, and IT consulting for startups and enterprises.'
+      q: 'What exactly does CORE4IX do?',
+      a: 'CORE4IX is an elite tech studio specializing in high-performance web applications, mobile apps, custom AI integration, and enterprise-grade software. We partner with businesses to architect scalable digital solutions that drive growth and operational efficiency.'
     },
     {
-      q: 'What industries does CORE4IX work with?',
-      a: 'We work with healthcare, education, real estate, manufacturing, logistics, and digital commerce teams across multiple markets.'
+      q: 'What is your typical process for a new development project?',
+      a: 'We start with a technical discovery phase to understand your business goals. From there, we design a scalable architecture, map out a sprint-based development roadmap, and execute with precision. You receive continuous updates, rigorous QA, and dedicated support post-launch.'
     },
     {
-      q: 'How does CORE4IX ensure data security and confidentiality?',
-      a: 'We follow security-first architecture, role-based access, encrypted data handling, and strict delivery workflows with confidentiality controls.'
+      q: 'Can you help integrate AI into my existing business operations?',
+      a: 'Absolutely. Our dedicated AI team specializes in Custom LLM integration, AI agent development, n8n visual workflows, and generative AI features. We build intelligent automation solutions that reduce overhead and streamline your specific workflows.'
     },
     {
-      q: 'What development process does CORE4IX follow?',
-      a: 'Our process includes discovery, roadmap planning, sprint-based development, QA cycles, and post-launch optimization with transparent updates.'
+      q: 'We need a complex e-commerce or marketplace platform. Is that something you handle?',
+      a: 'Yes. We build conversion-focused storefronts and complex multi-vendor marketplaces. We move beyond basic templates, delivering scalable, highly secure platforms designed for high traffic and seamless user experiences.'
     },
     {
-      q: 'Does CORE4IX build custom enterprise-grade software?',
-      a: 'Yes. We build custom enterprise software tailored to business workflows, scale requirements, and long-term maintainability.'
+      q: 'Do you work with specific industries?',
+      a: 'We have hands-on experience developing platforms across diverse sectors, including digital commerce, logistics, healthcare, academic consultancy, and fintech. Our custom applications and ERP solutions are tailored to meet unique compliance and scaling needs.'
     },
     {
-      q: 'Why do global businesses choose CORE4IX as their technology partner?',
-      a: 'Clients choose us for fast execution, clean engineering, business-focused delivery, and dependable communication throughout the project.'
+      q: 'How long does it usually take to build a custom application?',
+      a: 'Timelines vary based on project scope and complexity. A standard business portal might take a few weeks, while complex AI integrations or ERPs are delivered in phased milestones over a few months. We establish clear, transparent timelines during the initial setup.'
     },
     {
-      q: 'How does CORE4IX integrate AI into solutions?',
-      a: 'We integrate AI through intelligent automation, data pipelines, and model-assisted features that fit practical product use-cases.'
+      q: 'What happens after my application is launched?',
+      a: 'We do not just launch and leave. We provide post-launch optimization, cloud infrastructure maintenance, security updates, and ongoing technical support to ensure your product remains robust, secure, and future-ready.'
     },
     {
-      q: 'How can I start a project with CORE4IX?',
-      a: 'Start by reaching out through our contact section with your scope. We then schedule a discovery call and share a project roadmap.'
+      q: 'I have an idea. How do we get started?',
+      a: 'It\'s simple. Reach out to us via our Contact page or call us directly at +91 7016945985. We will schedule a technical discussion to explore your vision and outline how CORE4IX can bring your idea to life.'
     }
   ];
 

@@ -17,7 +17,7 @@
           <span class="text-6xl md:text-7xl font-black text-[#1f4e79] tracking-tighter transition-transform duration-500 group-hover:scale-110 block">06</span>
           <div class="absolute -top-1 -right-4 w-3 h-3 bg-[#00c6ff] rounded-full shadow-[0_0_15px_#00c6ff] animate-pulse"></div>
         </div>
-        <p class="mt-4 text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em]">Years of Alpha</p>
+        <p class="mt-4 text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em]">Projects Delivered</p>
         <div class="absolute inset-0 bg-blue-50/0 group-hover:bg-blue-50/50 -z-10 rounded-3xl transition-all duration-500"></div>
       </div>
 

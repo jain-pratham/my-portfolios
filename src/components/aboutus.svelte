@@ -13,7 +13,7 @@
           />
           <div class="absolute bottom-8 left-8 p-6 bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 max-w-[200px]">
             <p class="text-[#1f4e79] font-black text-2xl">04</p>
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Visionary Minds Leading the Squad</p>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Visionary Minds Leading the Team</p>
           </div>
         </div>
 
@@ -30,7 +30,7 @@
         </h2>
         
         <p class="text-slate-500 text-lg leading-relaxed mb-8">
-          Hum sirf code nahi likhte, hum digital assets banate hain jo scale ho sakein. CORE4IX ek boutique IT firm hai jo high-end performance aur cloud-native solutions par focus karti hai.
+          We don’t just write code — we build scalable digital assets. CORE4IX is a boutique IT firm focused on high-performance and cloud-native solutions.
         </p>
 
         <div class="space-y-6 mb-10">
@@ -42,7 +42,7 @@
             </div>
             <div>
               <h4 class="text-[#1f4e79] font-bold">Fast-Paced Innovation</h4>
-              <p class="text-slate-400 text-sm mt-1">Hum latest tech stack (Svelte, Next.js, AI) ka use karke 2x faster deliver karte hain.</p>
+              <p class="text-slate-400 text-sm mt-1">We use the latest tech stack (Svelte, Next.js, AI) to deliver solutions up to 2x faster.</p>
             </div>
           </div>
 
@@ -54,7 +54,7 @@
             </div>
             <div>
               <h4 class="text-[#1f4e79] font-bold">Security First Approach</h4>
-              <p class="text-slate-400 text-sm mt-1">Har project enterprise-grade security aur stability ke sath deploy hota hai.</p>
+              <p class="text-slate-400 text-sm mt-1">Every project is deployed with enterprise-grade security and stability.</p>
             </div>
           </div>
         </div>

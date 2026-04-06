@@ -1,0 +1,36 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import ServicePage from '../../components/services/ServicePage.astro';
+import { coreServiceList } from '../../data/servicesData';
+import type { ServicePageData } from '../../data/servicesData';
+
+export function getStaticPaths() {
+  return coreServiceList.map((service) => ({
+    params: { slug: service.slug },
+    props: { service }
+  }));
+}
+
+const { service } = Astro.props as { service: ServicePageData };
+---
+
+<MainLayout
+  title={service.seoTitle ?? `${service.title} | Core4ix`}
+  description={service.seoDescription ?? service.description}
+>
+  <Navbar client:load />
+  <ServicePage
+    eyebrow={service.eyebrow}
+    title={service.title}
+    subtitle={service.subtitle}
+    description={service.description}
+    features={service.features}
+    benefits={service.benefits}
+    image={service.image}
+    imageAlt={service.imageAlt}
+    cta={service.cta}
+  />
+  <Footer client:load />
+</MainLayout>

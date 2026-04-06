@@ -35,10 +35,10 @@
     { name: 'ABOUT US', href: '/about-us' },
     {
       name: 'PRODUCTS',
-      href: '#services',
+      href: '/products/vetra-ai',
       menu: [
-        { title: 'AI Consultancy', detail: 'Strategic AI planning and roadmap', href: '/ai/ai-consultancy' },
-        { title: 'AI Integration', detail: 'Seamless deployment of AI tools', href: '/ai/ai-integration' },
+        { title: 'Vetra AI', detail: 'Autonomous AI hiring and talent intelligence platform', href: '/products/vetra-ai' },
+        { title: 'InsightPulse AI', detail: 'AI-powered monitoring and business insights', href: '/products/insightpulse-ai' },
       ]
     },
     { name: 'PORTFOLIO', href: '/projects' },
@@ -91,11 +91,11 @@
 </script>
 
 <nav class="fixed left-0 top-0 z-[120] w-full transition-all duration-300 {isScrolled ? 'py-2' : 'py-4'}">
-  <div bind:this={navShell} class="container mx-auto px-4 sm:px-6" on:mouseleave={handleMouseLeave}>
+  <div bind:this={navShell} role="region" aria-label="Navigation Wrapper" class="container mx-auto px-4 sm:px-6" on:mouseleave={handleMouseLeave}>
     
     <div class="relative flex items-center justify-between rounded-2xl border border-slate-200/60 bg-white/90 px-4 py-2 shadow-lg shadow-blue-900/5 backdrop-blur-xl md:px-6">
       
-      <a href="#top" class="group flex items-center gap-3" on:click={closeMenus}>
+      <a href="/" class="group flex items-center gap-3" on:click={closeMenus}>
         <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl">
           <img
             src="/logo1.png"
@@ -134,7 +134,7 @@
       </div>
 
       <div class="hidden md:flex items-stretch overflow-hidden rounded-xl border border-slate-300 bg-[#eef2f4]">
-        <a href="tel:+919909388561" class="flex items-center gap-2 px-3 py-1.5 lg:px-3.5">
+        <a href="tel:+917016945985" class="flex items-center gap-2 px-3 py-1.5 lg:px-3.5">
           <div class="flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-[#1f4e79]">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.9 1.37l1.09 3.27a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.59 6.59l1.27-1.27a2 2 0 012.11-.45l3.27 1.09A2 2 0 0121 17.72V21a2 2 0 01-2 2h-1C9.16 23 1 14.84 1 5V5z" />
@@ -142,13 +142,14 @@
           </div>
           <div class="leading-tight">
             <p class="text-[9px] font-bold text-slate-500">Any Question</p>
-            <p class="text-sm font-black tracking-tight text-[#1f2937] lg:text-base">+91 99093 88561</p>
+            <p class="text-sm font-black tracking-tight text-[#1f2937] lg:text-base">+91 7016945985</p>
           </div>
         </a>
       </div>
 
       <button
         type="button"
+        aria-label="Toggle Menu"
         class="md:hidden p-2"
         on:click={() => (mobileMenuOpen = !mobileMenuOpen)}
       >
@@ -160,6 +161,8 @@
 
     {#if activeMenuConfig?.menu}
       <div 
+        role="region"
+        aria-label="Mega Menu"
         on:mouseenter={() => handleMouseEnter(activeMegaMenu)}
         transition:fly={{ y: 10, duration: 300 }}
         id="desktop-mega-menu" 
@@ -193,7 +196,7 @@
 
     {#if mobileMenuOpen}
       <div transition:fade={{ duration: 200 }} class="absolute left-6 right-6 top-24 rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl md:hidden">
-        <a href="tel:+919909388561" class="mb-5 flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-3">
+        <a href="tel:+917016945985" class="mb-5 flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-3">
           <div class="flex h-9 w-9 items-center justify-center rounded-md bg-white text-[#1f4e79]">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.9 1.37l1.09 3.27a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.59 6.59l1.27-1.27a2 2 0 012.11-.45l3.27 1.09A2 2 0 0121 17.72V21a2 2 0 01-2 2h-1C9.16 23 1 14.84 1 5V5z" />
@@ -201,7 +204,7 @@
           </div>
           <div>
             <p class="text-[10px] font-bold text-slate-500">Any Question</p>
-            <p class="text-base font-black text-[#1f2937]">+91 99093 88561</p>
+            <p class="text-base font-black text-[#1f2937]">+91 7016945985</p>
           </div>
         </a>
 

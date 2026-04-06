@@ -4,36 +4,29 @@
   const projects = [
     {
       id: 1,
-      title: 'VisaBud - Digital Visa Application Marketplace Built for Simplicity and Speed',
+      title: 'Academic Consultancy Platform for PhD Thesis & Research Guidance',
       summary:
-        'A high-conversion visa booking experience with country discovery, multi-step applications, and status tracking.',
-      image: '/web.webp',
-      imageAlt: 'Visa platform interface preview'
+        'A professional academic consultancy website designed to provide PhD thesis guidance, research support, and dissertation services. The platform enables students to explore services, access academic resources, and request personalized consultation with ease.',
+      image: '/project/poonam.png',
+      imageAlt: 'Academic consultancy website interface for PhD thesis and research guidance'
     },
     {
-      id: 2,
-      title: 'Manufacturing Control Hub with Live Operations Intelligence',
-      summary:
-        'Centralized dashboard for production planning, order tracking, and real-time machine performance analytics.',
-      image: '/company.png',
-      imageAlt: 'Manufacturing analytics dashboard preview'
-    },
+  id: 2,
+  title: 'Visa & Immigration Consultancy Website for Global Work and Study Services',
+  summary:
+    'A professional visa consultancy platform designed to help users explore work permits, student visas, and immigration services. The website enables users to understand visa options, book consultations, and start their application process easily.',
+  image: '/project/lakshpathglobal.png',
+  imageAlt: 'Visa consultancy website interface showing immigration and work permit services'
+},
     {
-      id: 3,
-      title: 'Healthcare Workflow Suite for Faster Clinical Coordination',
-      summary:
-        'A role-based web suite that reduced patient processing delays using smart scheduling and document automation.',
-      image: '/web.webp',
-      imageAlt: 'Healthcare workflow product preview'
-    },
-    {
-      id: 4,
-      title: 'Fintech Lending Portal Designed for Trust and Scale',
-      summary:
-        'Application and approval flows with secure onboarding, risk checks, and lender-facing portfolio insights.',
-      image: '/company.png',
-      imageAlt: 'Fintech portal interface preview'
-    }
+  id: 3,
+  title: 'Fashion Jewelry E-commerce Website for Modern Accessories Brand',
+  summary:
+    'A stylish e-commerce platform built for a jewelry brand, showcasing bracelets, necklaces, and fashion accessories. The website enables users to explore collections, view product details, and easily browse modern jewelry trends.',
+  image: '/project/seluraofficial.png',
+  imageAlt: 'Jewelry e-commerce website interface displaying bracelets and accessories collections'
+},
+
   ];
 
   let activeIndex = 0;
@@ -66,13 +59,14 @@
 
   <div class="container relative mx-auto grid grid-cols-1 gap-8 px-6 lg:grid-cols-[360px_1fr_auto] lg:items-center lg:gap-10">
     <div class="text-white">
-      <h2 class="text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-        <span class="text-[#ff3c3c]">7,000+</span> Completed Projects in <span class="text-[#ff3c3c]">41+ Countries</span>
-      </h2>
-      <p class="mt-6 text-base leading-relaxed text-slate-300">
-        Aalpha has successfully delivered AI-powered IT solutions across diverse industries, from healthcare and logistics to fintech and manufacturing.
-      </p>
-    </div>
+  <h2 class="text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+    <span class="text-[#ff3c3c]">06+</span> Projects Delivered <br />
+    <span class="text-[#ff3c3c]">Building Modern Digital Solutions</span>
+  </h2>
+  <p class="mt-6 text-base leading-relaxed text-slate-300">
+    We design and develop scalable web platforms, AI integrations, and high-performance applications for startups and growing businesses.
+  </p>
+</div>
 
     <div
       class="space-y-6"

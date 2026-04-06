@@ -9,29 +9,17 @@
   </div>
 
   <div class="relative flex overflow-x-hidden group">
-    <div class="flex animate-marquee whitespace-nowrap items-center gap-10 md:gap-16 px-8">
-      {#each Array(6) as _, i}
-        <div class="flex items-center justify-center w-44 md:w-56 h-20 md:h-24 px-5 rounded-xl hover:bg-slate-50/70 hover:scale-105 transition-all duration-500 cursor-pointer">
-          <img 
-            src="/logos/partner-{i + 1}.png" 
-            alt="Partner {i + 1}" 
-            class="max-w-full max-h-full object-contain contrast-125 saturate-125 brightness-110"
-          />
-        </div>
-      {/each}
+    <div class="max-w-6xl mx-auto mt-16 flex justify-center items-center flex-nowrap gap-12 md:gap-20 px-4 overflow-hidden">
+  {#each Array(4) as _, i}
+    <div class="flex-shrink-0 flex items-center justify-center w-44 md:w-56 h-20 md:h-24 px-5 rounded-xl hover:bg-slate-50/70 hover:scale-105 transition-all duration-500 cursor-pointer">
+      <img 
+        src="/logos/partner-{i + 1}.png" 
+        alt="Partner {i + 1}" 
+        class="max-w-full max-h-full object-contain contrast-125 saturate-125 brightness-110"
+      />
     </div>
-
-    <div class="absolute top-0 flex animate-marquee2 whitespace-nowrap items-center gap-10 md:gap-16 px-8" aria-hidden="true">
-      {#each Array(6) as _, i}
-        <div class="flex items-center justify-center w-44 md:w-56 h-20 md:h-24 px-5 rounded-xl hover:bg-slate-50/70 hover:scale-105 transition-all duration-500 cursor-pointer">
-          <img 
-            src="/logos/partner-{i + 1}.png" 
-            alt="Partner {i + 1}" 
-            class="max-w-full max-h-full object-contain contrast-125 saturate-125 brightness-110"
-          />
-        </div>
-      {/each}
-    </div>
+  {/each}
+</div>
 
     <div class="pointer-events-none absolute inset-y-0 left-0 w-20 md:w-40 bg-gradient-to-r from-white via-white/50 to-transparent z-10"></div>
     <div class="pointer-events-none absolute inset-y-0 right-0 w-20 md:w-40 bg-gradient-to-l from-white via-white/50 to-transparent z-10"></div>

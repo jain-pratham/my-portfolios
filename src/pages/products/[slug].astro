@@ -1,0 +1,40 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Navbar from '../../components/Navbar.svelte';
+import Footer from '../../components/footer/Footer.svelte';
+import ProductPage from '../../components/products/ProductPage.astro';
+import { productList } from '../../data/productsData';
+import type { ProductPageData } from '../../data/productsData';
+
+export function getStaticPaths() {
+  return productList.map((product) => ({
+    params: { slug: product.slug },
+    props: { product }
+  }));
+}
+
+const { product } = Astro.props as { product: ProductPageData };
+---
+
+<MainLayout
+  title={product.seoTitle ?? `${product.name} | Core4ix`}
+  description={product.seoDescription ?? product.description}
+>
+  <Navbar client:load />
+  <ProductPage
+    eyebrow={product.eyebrow}
+    name={product.name}
+    image={product.image}
+    category={product.category}
+    summary={product.summary}
+    description={product.description}
+    problemStatement={product.problemStatement}
+    problemsSolved={product.problemsSolved}
+    highlights={product.highlights}
+    modules={product.modules}
+    outcomes={product.outcomes}
+    audience={product.audience}
+    cta={product.cta}
+  />
+  <Footer client:load />
+</MainLayout>
