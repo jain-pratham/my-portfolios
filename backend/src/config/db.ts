@@ -4,36 +4,50 @@ import User from "../models/User";
 
 let mongod: MongoMemoryServer | null = null;
 
-const seedAdmin = async (): Promise<void> => {
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
-  const firstName = process.env.ADMIN_FIRST_NAME || "Super";
-  const lastName = process.env.ADMIN_LAST_NAME || "Admin";
-
-  if (!email || !password) {
-    console.log("Admin email or password not specified in environment variables. Seeding skipped.");
-    return;
-  }
-
+const seedDefaultUsers = async (): Promise<void> => {
   try {
-    const adminExists = await User.findOne({ email });
+    // 1. Admin Account
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@corewatch.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "password123";
+    const adminExists = await User.findOne({ email: adminEmail });
 
-    if (adminExists) {
-      console.log(`Admin user with email ${email} already exists in database.`);
-      return;
+    if (!adminExists) {
+      await User.create({
+        name: "Super Admin",
+        email: adminEmail,
+        password: adminPassword,
+        role: "admin",
+      });
+      console.log(`Default Admin created: ${adminEmail}`);
     }
 
-    const name = `${firstName} ${lastName}`.trim();
-    await User.create({
-      name,
-      email,
-      password, // hashed automatically by UserSchema pre-save hook
-      role: "admin",
-    });
+    // 2. Standard User Account
+    const userEmail = "user@corewatch.com";
+    const userExists = await User.findOne({ email: userEmail });
+    if (!userExists) {
+      await User.create({
+        name: "Standard Enterprise User",
+        email: userEmail,
+        password: "Jpdtp5!!",
+        role: "user",
+      });
+      console.log(`Default User created: ${userEmail}`);
+    }
 
-    console.log(`Admin user (${email}) created successfully from env variables.`);
+    // 3. Demo Account
+    const demoEmail = "demo@corewatch.com";
+    const demoExists = await User.findOne({ email: demoEmail });
+    if (!demoExists) {
+      await User.create({
+        name: "Demo Account",
+        email: demoEmail,
+        password: "Jpdtp5!!",
+        role: "demo",
+      });
+      console.log(`Default Demo created: ${demoEmail}`);
+    }
   } catch (error) {
-    console.error("Error seeding admin user:", error);
+    console.error("Error seeding default users:", error);
   }
 };
 
@@ -48,7 +62,7 @@ export const connectDB = async (): Promise<void> => {
       tlsAllowInvalidCertificates: true, // bypass certificate validation for VPN/proxy compatibility
     });
     console.log(`MongoDB Connected: ${mongoose.connection.host}`);
-    await seedAdmin();
+    await seedDefaultUsers();
   } catch (error) {
     console.warn(`MongoDB Connection failed: ${error instanceof Error ? error.message : error}`);
     console.log("Spinning up In-Memory MongoDB Server fallback...");
@@ -62,7 +76,7 @@ export const connectDB = async (): Promise<void> => {
       console.log(`In-Memory MongoDB Server running at: ${uri}`);
       await mongoose.connect(uri);
       console.log("MongoDB Connected: (In-Memory Database)");
-      await seedAdmin();
+      await seedDefaultUsers();
     } catch (err) {
       console.error(`In-Memory MongoDB failed to start: ${err instanceof Error ? err.message : err}`);
       process.exit(1);

@@ -1,26 +1,128 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Layout & Surfaces (Light Mode) */
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+
+  /* Core AI & Brand Colors (Light Mode) */
+  --primary: #0284C7;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #4338CA;
+  --secondary-foreground: #FFFFFF;
+
+  --accent: #06B6D4;
+  --accent-foreground: #FFFFFF;
+
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #0284C7;
+
+  /* Command Center Sidebar */
+  --sidebar-background: #0F172A;
+  --sidebar-foreground: #F1F5F9;
+  --sidebar-accent: #1E293B;
+  --sidebar-border: #1E293B;
+  --sidebar-ring: #06B6D4;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Layout & Surfaces (Dark Mode - Cyber Deep Slate) */
+  --background: #0B0F17;
+  --foreground: #F9FAFB;
+
+  --card: #111827;
+  --card-foreground: #F9FAFB;
+
+  --popover: #111827;
+  --popover-foreground: #F9FAFB;
+
+  /* Core AI & Brand Colors (Dark Mode - Electric Light Sky & Cyber Cyan) */
+  --primary: #38BDF8;
+  --primary-foreground: #0B0F17;
+
+  --secondary: #818CF8;
+  --secondary-foreground: #0B0F17;
+
+  --accent: #22D3EE;
+  --accent-foreground: #0B0F17;
+
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+
+  --destructive: #EF4444;
+  --destructive-foreground: #F9FAFB;
+
+  --border: #1F2937;
+  --input: #1F2937;
+  --ring: #38BDF8;
+
+  /* Command Center Sidebar (Dark Mode retains Slate-900 Command theme) */
+  --sidebar-background: #0F172A;
+  --sidebar-foreground: #F1F5F9;
+  --sidebar-accent: #1E293B;
+  --sidebar-border: #1E293B;
+  --sidebar-ring: #22D3EE;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-geist-sans, "Geist", ui-sans-serif, system-ui, sans-serif);
+  --font-mono: var(--font-geist-mono, "Geist Mono", ui-monospace, monospace);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }

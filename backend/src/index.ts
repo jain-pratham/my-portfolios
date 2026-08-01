@@ -25,7 +25,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Import controllers
-import { registerUser, loginUser, getMe } from "./controllers/authController";
+import { registerUser, loginUser, getMe, updateUserRole } from "./controllers/authController";
 import { getUsers, createUser, deleteUser } from "./controllers/userController";
 import { getLeads, createLead, updateLead, deleteLead } from "./controllers/leadController";
 
@@ -33,6 +33,7 @@ import { getLeads, createLead, updateLead, deleteLead } from "./controllers/lead
 app.post("/api/auth/register", registerUser);
 app.post("/api/auth/login", loginUser);
 app.get("/api/auth/me", protect, getMe);
+app.put("/api/auth/role", protect, updateUserRole);
 
 // Admin-only User Routes
 app.get("/api/users", protect, isAdmin, getUsers);

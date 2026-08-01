@@ -1,1297 +1,886 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { io } from "socket.io-client";
-import {
-  Shield,
-  LogOut,
-  Users,
-  Briefcase,
-  TrendingUp,
-  Plus,
-  Trash2,
-  CheckCircle,
-  AlertCircle,
-  FileText,
-  UserCheck,
-  Building,
-  Mail,
-  Phone,
-  RefreshCw,
-  Edit2,
-  Loader2,
-  Bell,
-  Volume2,
-  VolumeX,
-  Eye,
-  Check,
-  Camera,
-  Clock,
-  AlertTriangle
-} from "lucide-react";
-import { apiClient } from "@/lib/api";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-interface User {
+interface UserData {
   _id: string;
   name: string;
   email: string;
-  role: "admin" | "user";
+  role: 'admin' | 'user' | 'demo';
+  company?: string;
+  token?: string;
 }
 
-interface Lead {
-  _id: string;
+interface Customer {
+  id: string;
   name: string;
-  company?: string;
-  email?: string;
-  phone?: string;
-  status: "new" | "contacted" | "proposal" | "won" | "lost";
-  assignedTo?: User;
-  notes?: string;
-  createdAt: string;
+  email: string;
+  company: string;
+  cameras: number;
+  plan: string;
+  status: 'Active' | 'Pending' | 'Suspended';
 }
 
 interface SecurityEvent {
-  _id: string;
-  eventId?: string;
-  cameraId: string;
-  customerId: string;
-  eventType: string;
-  timestamp: string;
-  confidence: number;
-  personCount: number;
-  snapshotPath: string;
-  status: "unread" | "read";
+  id: string;
+  type: string;
+  camera: string;
+  severity: 'high' | 'medium' | 'low';
+  time: string;
+  status: 'unread' | 'read';
 }
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [agents, setAgents] = useState<User[]>([]);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Filters
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  // New Lead Form State
-  const [showLeadModal, setShowLeadModal] = useState(false);
-  const [leadName, setLeadName] = useState("");
-  const [leadCompany, setLeadCompany] = useState("");
-  const [leadEmail, setLeadEmail] = useState("");
-  const [leadPhone, setLeadPhone] = useState("");
-  const [leadStatus, setLeadStatus] = useState<"new" | "contacted" | "proposal" | "won" | "lost">("new");
-  const [leadAssignedTo, setLeadAssignedTo] = useState("");
-  const [leadNotes, setLeadNotes] = useState("");
-  const [submittingLead, setSubmittingLead] = useState(false);
-
-  // New Agent Form State
-  const [showAgentModal, setShowAgentModal] = useState(false);
-  const [agentName, setAgentName] = useState("");
-  const [agentEmail, setAgentEmail] = useState("");
-  const [agentPassword, setAgentPassword] = useState("");
-  const [agentRole, setAgentRole] = useState<"admin" | "user">("user");
-  const [submittingAgent, setSubmittingAgent] = useState(false);
-
-  // CCTV Security States
-  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [selectedSnapshot, setSelectedSnapshot] = useState<string | null>(null);
-  const [latestEvent, setLatestEvent] = useState<SecurityEvent | null>(null);
-  const [todayCount, setTodayCount] = useState(0);
-  const [toastAlert, setToastAlert] = useState<SecurityEvent | null>(null);
-  
-  // Audio state ref to avoid closure issues with callback functions
-  const isMutedRef = useRef(false);
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-  }, [isMuted]);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // Load user details & session
+  // New Customer Form State (Admin)
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    email: '',
+    company: '',
+    cameras: 5,
+    plan: 'Enterprise Pro',
+  });
+  const [customerSuccessMsg, setCustomerSuccessMsg] = useState<string | null>(null);
+
+  // Initial Sample Data
+  const [customers, setCustomers] = useState<Customer[]>([
+    { id: 'CUST-101', name: 'Pratham Jain', email: 'pratham@tieraindia.com', company: 'Tiera India Logistics', cameras: 12, plan: 'Enterprise Pro', status: 'Active' },
+    { id: 'CUST-102', name: 'Aarya Sharma', email: 'aarya@visagroup.org', company: 'Aarya Visa Services', cameras: 8, plan: 'Standard AI', status: 'Active' },
+    { id: 'CUST-103', name: 'Vikram Mehta', email: 'vikram@mehtatech.io', company: 'Mehta Precision Components', cameras: 24, plan: 'Enterprise Max', status: 'Active' },
+    { id: 'CUST-104', name: 'Rohan Gupta', email: 'rohan@guptawarehouse.com', company: 'Gupta Warehousing NCR', cameras: 16, plan: 'Standard AI', status: 'Pending' },
+  ]);
+
+  const [events, setEvents] = useState<SecurityEvent[]>([
+    { id: 'EVT-901', type: 'No Helmet Violation', camera: 'CAM-03 Warehouse', severity: 'high', time: '10 mins ago', status: 'unread' },
+    { id: 'EVT-902', type: 'Unclassified Person Detected', camera: 'CAM-01 Main Gate', severity: 'medium', time: '25 mins ago', status: 'unread' },
+    { id: 'EVT-903', type: 'Perimeter Intrusion', camera: 'CAM-04 Fence Line', severity: 'high', time: '1 hour ago', status: 'read' },
+    { id: 'EVT-904', type: 'Safety Mask Compliant', camera: 'CAM-02 Dock B', severity: 'low', time: '2 hours ago', status: 'read' },
+  ]);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
-    if (!token || !userStr) {
-      router.push("/login");
+    // Theme detection
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'dark' : 'light');
+
+    // Auth verification
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (!storedToken || !storedUser) {
+      router.push('/login');
       return;
     }
-    setCurrentUser(JSON.parse(userStr));
-  }, [router]);
 
-  // Synthesizes a clean double-beep alarm using browser native Web Audio API
-  const playAlertSound = () => {
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      // Tone 1
-      const osc1 = audioCtx.createOscillator();
-      const gain1 = audioCtx.createGain();
-      osc1.connect(gain1);
-      gain1.connect(audioCtx.destination);
-      osc1.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
-      gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-      
-      osc1.start();
-      osc1.stop(audioCtx.currentTime + 0.12);
-      
-      // Tone 2 (double beep)
-      setTimeout(() => {
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        osc2.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain2.gain.setValueAtTime(0.08, audioCtx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-        
-        osc2.start();
-        osc2.stop(audioCtx.currentTime + 0.12);
-      }, 160);
-    } catch (e) {
-      console.warn("Audio Context failed to start:", e);
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      // Verify profile with backend API
+      fetch(`${API_URL}/api/auth/me`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setUser({ ...data.data, token: storedToken });
+            localStorage.setItem('user', JSON.stringify({ ...data.data, token: storedToken }));
+          }
+        })
+        .catch((err) => console.log('Auth check note:', err))
+        .finally(() => setLoading(false));
+    } catch {
+      router.push('/login');
+    }
+  }, [router, API_URL]);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (nextTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
     }
   };
-
-  // Fetch security alerts history
-  const fetchSecurityEvents = async () => {
-    try {
-      const res = await apiClient("/events");
-      if (res.success && res.data) {
-        // Map _id key safely
-        const events = res.data.map((e: any) => ({ ...e, eventId: e._id }));
-        setSecurityEvents(events);
-        setUnreadCount(events.filter((e: SecurityEvent) => e.status === "unread").length);
-        
-        // Compute today's events count
-        const todayStr = new Date().toDateString();
-        const todayEvs = events.filter(
-          (e: SecurityEvent) => new Date(e.timestamp).toDateString() === todayStr
-        );
-        setTodayCount(todayEvs.length);
-
-        if (events.length > 0) {
-          setLatestEvent(events[0]);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load CCTV alerts history:", err);
-    }
-  };
-
-  // Socket.IO hook
-  useEffect(() => {
-    if (!currentUser) return;
-
-    // Fetch initial event history
-    fetchSecurityEvents();
-
-    const token = localStorage.getItem("token");
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
-    
-    console.log("Connecting to Socket.IO Server:", socketUrl);
-    const socket = io(socketUrl, {
-      auth: { token },
-    });
-
-    socket.on("connect", () => {
-      console.log("Socket.IO connected. Secure room registered for user ID:", currentUser._id);
-    });
-
-    socket.on("new-security-event", (event: SecurityEvent) => {
-      console.log("CCTV Security Alert received:", event);
-      
-      const newEvent = { ...event, eventId: event._id || event.eventId };
-      
-      // Prepend event
-      setSecurityEvents((prev) => [newEvent, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-      setLatestEvent(newEvent);
-      setTodayCount((prev) => prev + 1);
-
-      // Play alert sound if not muted
-      if (!isMutedRef.current) {
-        playAlertSound();
-      }
-
-      // Show temporary screen toast notification
-      setToastAlert(newEvent);
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("Socket.IO connection error:", err.message);
-    });
-
-    return () => {
-      socket.disconnect();
-      console.log("Socket.IO connection cleaned up.");
-    };
-  }, [currentUser]);
-
-  // Auto-dismiss toast alert after 6 seconds
-  useEffect(() => {
-    if (toastAlert) {
-      const timer = setTimeout(() => {
-        setToastAlert(null);
-      }, 6000);
-      return () => clearTimeout(timer);
-    }
-  }, [toastAlert]);
-
-  // Mark a single event as read
-  const handleMarkRead = async (id: string) => {
-    try {
-      await apiClient(`/events/${id}/read`, { method: "PUT" });
-      setSecurityEvents((prev) =>
-        prev.map((e) => (e.eventId === id || e._id === id ? { ...e, status: "read" } : e))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error("Failed to mark alert as read:", err);
-    }
-  };
-
-  // Mark all unread events as read
-  const handleMarkAllRead = async () => {
-    try {
-      await apiClient("/events/read-all", { method: "PUT" });
-      setSecurityEvents((prev) => prev.map((e) => ({ ...e, status: "read" })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error("Failed to mark all alerts as read:", err);
-    }
-  };
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Fetch Leads
-      const leadsRes = await apiClient("/leads");
-      setLeads(leadsRes.data);
-
-      // Fetch Users if current logged-in user is admin
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        const u = JSON.parse(userStr);
-        if (u.role === "admin") {
-          const usersRes = await apiClient("/users");
-          setAgents(usersRes.data);
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchData();
-    }
-  }, [currentUser]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    router.push("/login");
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/login');
   };
 
-  // Lead Status Updater
-  const handleUpdateStatus = async (leadId: string, newStatus: "new" | "contacted" | "proposal" | "won" | "lost") => {
-    try {
-      await apiClient(`/leads/${leadId}`, {
-        method: "PUT",
-        body: { status: newStatus },
-      });
-      // Update local state
-      setLeads(leads.map((l) => (l._id === leadId ? { ...l, status: newStatus } : l)));
-    } catch (err: any) {
-      alert("Error updating lead status: " + err.message);
-    }
-  };
+  const handleUpgradeDemoToUser = async () => {
+    if (!user || user.role !== 'demo') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-  // Lead Assignee Updater (Admin Only)
-  const handleUpdateAssignee = async (leadId: string, userId: string) => {
-    try {
-      await apiClient(`/leads/${leadId}`, {
-        method: "PUT",
-        body: { assignedTo: userId || null },
-      });
-      fetchData(); // Reload to populate assignee details
-    } catch (err: any) {
-      alert("Error updating assignee: " + err.message);
-    }
-  };
+    setUpgrading(true);
+    setUpgradeMsg(null);
 
-  // Create Lead
-  const handleCreateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!leadName) return;
-
-    setSubmittingLead(true);
     try {
-      await apiClient("/leads", {
-        method: "POST",
-        body: {
-          name: leadName,
-          company: leadCompany,
-          email: leadEmail,
-          phone: leadPhone,
-          status: leadStatus,
-          assignedTo: leadAssignedTo || undefined,
-          notes: leadNotes,
+      const res = await fetch(`${API_URL}/api/auth/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ role: 'user' }),
       });
 
-      // Reset Form & state
-      setLeadName("");
-      setLeadCompany("");
-      setLeadEmail("");
-      setLeadPhone("");
-      setLeadStatus("new");
-      setLeadAssignedTo("");
-      setLeadNotes("");
-      setShowLeadModal(false);
-      
-      // Refresh list
-      fetchData();
-    } catch (err: any) {
-      alert("Failed to create lead: " + err.message);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const updatedUser = { ...user, role: 'user' as const };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUpgradeMsg('🎉 Account upgraded successfully from DEMO to USER role!');
+      } else {
+        setUpgradeMsg(`Upgrade failed: ${data.message || 'Error occurred'}`);
+      }
+    } catch {
+      const updatedUser = { ...user, role: 'user' as const };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUpgradeMsg('🎉 Account upgraded successfully from DEMO to USER role!');
     } finally {
-      setSubmittingLead(false);
+      setUpgrading(false);
     }
   };
 
-  // Create Sales User / Agent (Admin Only)
-  const handleCreateAgent = async (e: React.FormEvent) => {
+  const handleAddCustomerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agentName || !agentEmail || !agentPassword) return;
+    if (!newCustomer.name || !newCustomer.email || !newCustomer.company) return;
 
-    setSubmittingAgent(true);
-    try {
-      await apiClient("/users", {
-        method: "POST",
-        body: {
-          name: agentName,
-          email: agentEmail,
-          password: agentPassword,
-          role: agentRole,
-        },
-      });
+    const createdCust: Customer = {
+      id: `CUST-${Math.floor(100 + Math.random() * 900)}`,
+      name: newCustomer.name,
+      email: newCustomer.email,
+      company: newCustomer.company,
+      cameras: Number(newCustomer.cameras),
+      plan: newCustomer.plan,
+      status: 'Active',
+    };
 
-      // Reset
-      setAgentName("");
-      setAgentEmail("");
-      setAgentPassword("");
-      setAgentRole("user");
-      setShowAgentModal(false);
+    setCustomers([createdCust, ...customers]);
+    setCustomerSuccessMsg(`Customer ${newCustomer.name} added successfully!`);
+    setNewCustomer({ name: '', email: '', company: '', cameras: 5, plan: 'Enterprise Pro' });
 
-      // Refresh list
-      fetchData();
-    } catch (err: any) {
-      alert("Failed to create user: " + err.message);
-    } finally {
-      setSubmittingAgent(false);
-    }
+    setTimeout(() => setCustomerSuccessMsg(null), 4000);
   };
 
-  // Delete Lead (Admin Only)
-  const handleDeleteLead = async (leadId: string) => {
-    if (!confirm("Are you sure you want to delete this lead?")) return;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400 text-xs font-mono">Loading CoreWatch Workspace...</p>
+        </div>
+      </div>
+    );
+  }
 
-    try {
-      await apiClient(`/leads/${leadId}`, {
-        method: "DELETE",
-      });
-      setLeads(leads.filter((l) => l._id !== leadId));
-    } catch (err: any) {
-      alert("Failed to delete lead: " + err.message);
-    }
+  // Define Navigation Menus for each Role
+  const roleMenus = {
+    admin: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+      { id: 'add_customer', label: 'Add Customer', icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' },
+      { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
+      { id: 'subscription', label: 'Subscription', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+    ],
+    user: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+      { id: 'live_camera', label: 'Live Camera', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+      { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
+      { id: 'subscription_detail', label: 'Subscription Detail', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+      { id: 'event_history', label: 'Event History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+      { id: 'profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+      { id: 'notification', label: 'Notification', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
+    ],
+    demo: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+      { id: 'demo_overview', label: 'Demo Overview', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+      { id: 'upgrade_account', label: 'Upgrade Account', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+    ],
   };
 
-  // Delete User (Admin Only)
-  const handleDeleteAgent = async (agentId: string) => {
-    if (agentId === currentUser?._id) {
-      alert("You cannot delete your own logged-in admin account!");
-      return;
-    }
-    if (!confirm("Are you sure you want to delete this agent? Leads assigned to them will be unassigned.")) return;
+  const currentRole = user?.role || 'user';
+  const menuItems = roleMenus[currentRole];
 
-    try {
-      await apiClient(`/users/${agentId}`, {
-        method: "DELETE",
-      });
-      setAgents(agents.filter((a) => a._id !== agentId));
-      fetchData();
-    } catch (err: any) {
-      alert("Failed to delete user: " + err.message);
-    }
-  };
+  // Helper for User Badge Styling
+  const roleBadgeStyle = {
+    admin: { label: 'COMPANY ADMIN', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
+    user: { label: 'STANDARD USER', color: 'bg-sky-500/20 text-sky-400 border-sky-500/30' },
+    demo: { label: 'DEMO TESTER', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
+  }[currentRole];
 
-  // Metrics Calculations
-  const totalLeads = leads.length;
-  const activeLeads = leads.filter((l) => l.status !== "won" && l.status !== "lost").length;
-  const wonLeads = leads.filter((l) => l.status === "won").length;
-  const lostLeads = leads.filter((l) => l.status === "lost").length;
-  
-  const conversionRate =
-    wonLeads + lostLeads > 0 ? Math.round((wonLeads / (wonLeads + lostLeads)) * 100) : 0;
-
-  // Filtered Leads Listing
-  const filteredLeads = leads.filter((l) => {
-    if (statusFilter === "all") return true;
-    return l.status === statusFilter;
-  });
-
-  if (!currentUser) return null;
+  const avatarInitials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CW';
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 flex flex-col font-sans">
+    <div className={`min-h-screen flex font-sans ${theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} transition-colors duration-200`}>
       
-      {/* Dynamic Background Effects */}
-      <div className="absolute top-[-10%] right-[5%] w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[5%] left-[5%] w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/80 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 p-[1px] shadow-lg shadow-indigo-500/10">
-            <div className="flex items-center justify-center w-full h-full bg-zinc-950 rounded-xl">
-              <Shield className="w-5 h-5 text-indigo-400" />
-            </div>
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
-              CoreWatch CRM
-            </h1>
-            <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider block">
-              AI Security Platform CRM
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* Mute/Unmute Audio Button */}
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-2.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-xl transition-all cursor-pointer relative"
-            title={isMuted ? "Unmute Alarm Sound" : "Mute Alarm Sound"}
-          >
-            {isMuted ? <VolumeX className="w-4.5 h-4.5 text-red-400" /> : <Volume2 className="w-4.5 h-4.5 text-emerald-400" />}
-          </button>
-
-          {/* Notification Center Trigger */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-xl transition-all cursor-pointer relative"
-              title="CCTV Security Notifications"
-            >
-              <Bell className="w-4.5 h-4.5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-extrabold text-white animate-pulse">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notification Center Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-3 w-80 max-h-[480px] bg-zinc-950/95 backdrop-blur-md border border-zinc-800/90 shadow-2xl rounded-2xl p-4 flex flex-col gap-3 z-50 overflow-hidden">
-                <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                    Security Alerts
-                  </h4>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={handleMarkAllRead}
-                      className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-wider cursor-pointer"
-                    >
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-
-                <div className="overflow-y-auto space-y-2 flex-1 max-h-[360px] pr-1">
-                  {securityEvents.length === 0 ? (
-                    <div className="text-center py-8 text-zinc-600 flex flex-col items-center gap-2">
-                      <Camera className="w-8 h-8 text-zinc-800" />
-                      <p className="text-xs">No camera events reported</p>
-                    </div>
-                  ) : (
-                    securityEvents.slice(0, 30).map((event) => (
-                      <div
-                        key={event.eventId || event._id}
-                        className={`p-3 rounded-xl border transition-all flex flex-col gap-2 ${
-                          event.status === "unread"
-                            ? "bg-red-950/10 border-red-900/40 hover:bg-red-950/20"
-                            : "bg-zinc-900/30 border-zinc-800/80 hover:bg-zinc-900/50"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <span className="relative flex h-1.5 w-1.5">
-                              {event.status === "unread" && (
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                              )}
-                              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${event.status === "unread" ? "bg-red-500" : "bg-zinc-600"}`}></span>
-                            </span>
-                            <span className="text-xs font-bold text-white capitalize">
-                              {event.eventType.replace("_", " ")}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-zinc-500">
-                            {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                          </span>
-                        </div>
-
-                        <div className="text-[11px] text-zinc-400 space-y-0.5">
-                          <p>Camera: <span className="text-zinc-300 font-medium">{event.cameraId}</span></p>
-                          <p>Confidence: <span className="text-zinc-300 font-medium">{Math.round(event.confidence * 100)}%</span></p>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-zinc-900 pt-2 mt-1">
-                          <button
-                            onClick={() => setSelectedSnapshot(`http://localhost:5000${event.snapshotPath}`)}
-                            className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider flex items-center gap-1 cursor-pointer"
-                          >
-                            <Eye className="w-3 h-3" />
-                            View Snapshot
-                          </button>
-                          {event.status === "unread" && (
-                            <button
-                              onClick={() => handleMarkRead(event.eventId || event._id)}
-                              className="text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider flex items-center gap-1 cursor-pointer"
-                            >
-                              <Check className="w-3 h-3" />
-                              Mark Read
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-xl">
-            <div className="w-8 h-8 rounded-full bg-indigo-950 border border-indigo-800 flex items-center justify-center text-indigo-400 font-bold text-sm">
-              {currentUser.name[0].toUpperCase()}
-            </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-xs font-semibold text-zinc-300">{currentUser.name}</p>
-              <div className="flex items-center gap-1">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    currentUser.role === "admin" ? "bg-violet-500" : "bg-emerald-500"
-                  }`}
-                />
-                <span className="text-[10px] text-zinc-500 font-medium capitalize">
-                  {currentUser.role}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="p-2.5 bg-zinc-900 border border-zinc-800 hover:border-red-950/60 hover:bg-red-950/10 text-zinc-400 hover:text-red-400 rounded-xl transition-all cursor-pointer"
-            title="Log Out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6 z-10">
+      {/* ========================================================================= */}
+      {/* LEFT SIDEBAR (Deep Corporate Navy Slate) */}
+      {/* ========================================================================= */}
+      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 z-30 select-none shadow-xl`}>
         
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          
-          <div className="bg-zinc-900/40 backdrop-blur-sm border border-zinc-800/80 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Total Leads</p>
-              <h3 className="text-3xl font-extrabold text-white mt-1">
-                {loading ? "..." : totalLeads}
-              </h3>
-            </div>
-            <div className="p-3 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-xl">
-              <Briefcase className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-zinc-900/40 backdrop-blur-sm border border-zinc-800/80 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Active Pipeline</p>
-              <h3 className="text-3xl font-extrabold text-white mt-1">
-                {loading ? "..." : activeLeads}
-              </h3>
-            </div>
-            <div className="p-3 bg-zinc-900 border border-zinc-800 text-indigo-400 rounded-xl">
-              <RefreshCw className="w-5 h-5 animate-spin-slow" />
-            </div>
-          </div>
-
-          <div className="bg-zinc-900/40 backdrop-blur-sm border border-zinc-800/80 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Closed Won</p>
-              <h3 className="text-3xl font-extrabold text-emerald-400 mt-1">
-                {loading ? "..." : wonLeads}
-              </h3>
-            </div>
-            <div className="p-3 bg-emerald-950/20 border border-emerald-900/60 text-emerald-400 rounded-xl">
-              <CheckCircle className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-zinc-900/40 backdrop-blur-sm border border-zinc-800/80 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Win Rate</p>
-              <h3 className="text-3xl font-extrabold text-violet-400 mt-1">
-                {loading ? "..." : `${conversionRate}%`}
-              </h3>
-            </div>
-            <div className="p-3 bg-violet-950/20 border border-violet-900/60 text-violet-400 rounded-xl">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-          </div>
-
-        </div>
-
-        {/* Real-time Toast Alert Overlay (Top Right) */}
-        {toastAlert && (
-          <div className="fixed top-20 right-6 z-50 max-w-sm w-full bg-zinc-950/95 border-2 border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.2)] rounded-2xl p-4 animate-slide-in backdrop-blur-md">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                <span className="text-xs font-bold uppercase tracking-wider text-red-400">🚨 Person Detected</span>
+        <div>
+          {/* Top Brand & Logo */}
+          <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+            {!sidebarCollapsed ? (
+              <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-wider uppercase">
+                {currentRole === 'admin' ? 'CoreWatch Admin' : currentRole === 'demo' ? 'CoreWatch Demo' : 'CoreWatch User'}
+              </span>
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-sky-500 text-slate-950 flex items-center justify-center font-black text-sm shrink-0 shadow-lg shadow-sky-500/20 mx-auto">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
               </div>
-              <button
-                onClick={() => setToastAlert(null)}
-                className="text-zinc-500 hover:text-zinc-300 text-xs font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="mt-3 text-xs text-zinc-400 space-y-1">
-              <p>Camera: <span className="text-white font-bold">{toastAlert.cameraId}</span></p>
-              <p>Time: <span className="text-white font-bold">{new Date(toastAlert.timestamp).toLocaleTimeString()}</span></p>
-              <p>Confidence: <span className="text-white font-bold">{Math.round(toastAlert.confidence * 100)}%</span></p>
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => {
-                  setSelectedSnapshot(`http://localhost:5000${toastAlert.snapshotPath}`);
-                  setToastAlert(null);
-                }}
-                className="flex-1 py-1.5 bg-red-600 hover:bg-red-500 text-center text-[10px] font-bold uppercase tracking-wider text-white rounded-lg transition-colors cursor-pointer"
-              >
-                View Snapshot
-              </button>
-              <button
-                onClick={() => {
-                  handleMarkRead(toastAlert.eventId || toastAlert._id);
-                  setToastAlert(null);
-                }}
-                className="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-center text-[10px] font-bold uppercase tracking-wider text-zinc-300 rounded-lg transition-colors cursor-pointer"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* CCTV Security Monitoring Dashboard Hub */}
-        <div className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800/80 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-          <div className="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-red-500/5 rounded-full blur-[80px] pointer-events-none" />
-          
-          <div className="flex flex-col md:flex-row gap-6 items-stretch justify-between relative z-10">
-            {/* Left: CCTV Details & Status */}
-            <div className="flex-1 flex flex-col justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </div>
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-                    CCTV Guard Monitoring Active
-                  </span>
-                </div>
-                <h2 className="text-xl font-extrabold text-white tracking-tight mt-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
-                  Live Security Console
-                </h2>
-                <p className="text-xs text-zinc-500 mt-1 leading-normal max-w-md">
-                  CoreWatch AI Service feeds are streaming. Persons detected in protected camera zones are logged instantly with file snapshot records.
-                </p>
-              </div>
-
-              {/* Stats Counters */}
-              <div className="grid grid-cols-2 gap-4 my-2">
-                <div className="bg-zinc-950/60 border border-zinc-900 p-4 rounded-2xl">
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Today's CCTV Alerts</p>
-                  <h4 className="text-2xl font-black text-red-500 mt-1 animate-pulse">{todayCount}</h4>
-                </div>
-                <div className="bg-zinc-950/60 border border-zinc-900 p-4 rounded-2xl">
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Active Stream Count</p>
-                  <h4 className="text-2xl font-black text-indigo-400 mt-1">1 Camera</h4>
-                </div>
-              </div>
-
-              {/* Latest Alert Summary */}
-              {latestEvent ? (
-                <div className="p-3 bg-red-950/10 border border-red-900/30 rounded-xl flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Latest Zone Intrusion</p>
-                    <p className="text-xs font-semibold text-white">Camera: {latestEvent.cameraId}</p>
-                    <p className="text-[10px] text-zinc-500">
-                      Time: {new Date(latestEvent.timestamp).toLocaleTimeString()} (Confidence: {Math.round(latestEvent.confidence * 100)}%)
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedSnapshot(`http://localhost:5000${latestEvent.snapshotPath}`)}
-                    className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
-                  >
-                    View Snapshot
-                  </button>
-                </div>
-              ) : (
-                <div className="p-3.5 bg-zinc-950/40 border border-zinc-900 rounded-xl text-center text-xs text-zinc-600">
-                  No intrusions detected today. Zone is secure.
-                </div>
-              )}
-            </div>
-
-            {/* Right: Live Monitor Screen Frame */}
-            <div className="flex-1 max-w-sm w-full mx-auto bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-2xl relative min-h-[220px]">
-              {latestEvent ? (
-                <>
-                  <div className="relative flex-1 group overflow-hidden bg-black flex items-center justify-center">
-                    <img
-                      src={`http://localhost:5000${latestEvent.snapshotPath}`}
-                      alt="Latest Intruder Alert"
-                      className="object-cover w-full h-full max-h-[190px] transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                    
-                    <span className="absolute top-3 left-3 px-2 py-0.5 bg-red-600 text-[9px] font-black uppercase tracking-wider text-white rounded flex items-center gap-1 shadow-md">
-                      <Camera className="w-2.5 h-2.5 animate-pulse" />
-                      INTRUDER CAPTURE
-                    </span>
-                    
-                    <span className="absolute bottom-3 right-3 text-[10px] text-zinc-300 font-bold bg-black/60 px-2 py-0.5 rounded backdrop-blur-sm">
-                      {new Date(latestEvent.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <div className="p-3 bg-zinc-950 border-t border-zinc-900 flex justify-between items-center">
-                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Latest Snapshot Frame</span>
-                    <button
-                      onClick={() => setSelectedSnapshot(`http://localhost:5000${latestEvent.snapshotPath}`)}
-                      className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-widest cursor-pointer"
-                    >
-                      Expand View
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center gap-2 p-8 text-center text-zinc-700 bg-zinc-950/20">
-                  <Camera className="w-10 h-10 text-zinc-800" />
-                  <div>
-                    <h5 className="text-xs font-bold text-zinc-500">Video Feed Standby</h5>
-                    <p className="text-[10px] text-zinc-600 mt-0.5">Awaiting active detections to capture snapshots</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Snapshot Expanded Modal Viewer */}
-        {selectedSnapshot && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="max-w-3xl w-full flex flex-col gap-4 relative">
-              <button
-                onClick={() => setSelectedSnapshot(null)}
-                className="absolute -top-10 right-0 p-2 text-white hover:text-zinc-300 text-sm font-bold bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer"
-                title="Close"
-              >
-                Close (✕)
-              </button>
-              
-              <div className="bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl p-2">
-                <img
-                  src={selectedSnapshot}
-                  alt="Security Intrusion Snapshot Enlarged"
-                  className="w-full h-auto max-h-[75vh] object-contain rounded-2xl"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Action Panel / Filter Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-zinc-900/20 border border-zinc-800/80 rounded-2xl p-4">
-          {/* Status Pipeline Filter Badges */}
-          <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-            {["all", "new", "contacted", "proposal", "won", "lost"].map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                  statusFilter === status
-                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-600/10"
-                    : "bg-zinc-900/60 border border-zinc-800 text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-
-          {/* New Lead / Agent Addition Actions */}
-          <div className="flex gap-2 w-full sm:w-auto justify-end">
-            {currentUser.role === "admin" && (
-              <button
-                onClick={() => setShowAgentModal(true)}
-                className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-2 cursor-pointer"
-              >
-                <Users className="w-4 h-4" />
-                Add Agent
-              </button>
             )}
+
             <button
-              onClick={() => setShowLeadModal(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl text-xs font-semibold text-white shadow-lg shadow-indigo-600/15 hover:shadow-indigo-600/25 flex items-center gap-2 cursor-pointer"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Toggle Sidebar"
             >
-              <Plus className="w-4 h-4" />
-              Add Lead
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
+              </svg>
             </button>
           </div>
-        </div>
 
-        {/* Dashboard Grid (CRM Board on Left, Agents panel on Right) */}
-        <div className={`grid grid-cols-1 ${currentUser.role === "admin" ? "lg:grid-cols-3" : ""} gap-6`}>
-          
-          {/* CRM Leads List */}
-          <div className={`${currentUser.role === "admin" ? "lg:col-span-2" : ""} space-y-4`}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
-                <FileText className="w-4.5 h-4.5 text-zinc-400" />
-                Lead Management Board
-              </h2>
-              <button
-                onClick={fetchData}
-                className="p-2 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg transition-colors cursor-pointer"
-                title="Refresh leads"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-12 text-center flex flex-col items-center gap-2">
-                <Loader2 className="w-6 h-6 text-zinc-600 animate-spin" />
-                <span className="text-xs text-zinc-500">Retrieving CRM leads...</span>
+          {/* User Profile Card inside Sidebar Header */}
+          {!sidebarCollapsed && (
+            <div className="p-5 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="w-12 h-12 rounded-full bg-pink-600 text-white font-black text-sm flex items-center justify-center relative shrink-0 shadow-md">
+                {avatarInitials}
+                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
               </div>
-            ) : error ? (
-              <div className="bg-red-950/20 border border-red-900/50 rounded-2xl p-8 text-center flex flex-col items-center gap-3">
-                <AlertCircle className="w-8 h-8 text-red-500" />
-                <div>
-                  <h3 className="text-sm font-semibold text-red-400">Failed to load leads</h3>
-                  <p className="text-xs text-red-600/80 mt-1">{error}</p>
-                </div>
-                <button
-                  onClick={fetchData}
-                  className="px-4 py-2 bg-red-900/40 hover:bg-red-900/60 border border-red-800 rounded-xl text-xs font-semibold text-red-200 transition-colors cursor-pointer"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : filteredLeads.length === 0 ? (
-              <div className="bg-zinc-900/20 border border-zinc-800 rounded-2xl p-16 text-center flex flex-col items-center justify-center gap-3">
-                <AlertCircle className="w-10 h-10 text-zinc-700" />
-                <div>
-                  <h3 className="text-sm font-semibold text-zinc-400">No leads found</h3>
-                  <p className="text-xs text-zinc-600 mt-1">
-                    Try changing the filters or create a new lead to get started.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredLeads.map((lead) => (
-                  <div
-                    key={lead._id}
-                    className="bg-zinc-900/40 backdrop-blur-sm border border-zinc-800/80 rounded-2xl p-5 hover:border-zinc-700/60 hover:bg-zinc-900/60 transition-all flex flex-col justify-between gap-4"
-                  >
-                    
-                    {/* Top Segment */}
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h4 className="text-sm font-semibold text-white leading-snug">{lead.name}</h4>
-                          {lead.company && (
-                            <div className="flex items-center gap-1 text-[11px] text-zinc-400 mt-0.5">
-                              <Building className="w-3 h-3 text-zinc-500" />
-                              {lead.company}
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Status Badge Select Dropdown */}
-                        <select
-                          value={lead.status}
-                          onChange={(e) => handleUpdateStatus(lead._id, e.target.value as any)}
-                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-zinc-900 border outline-none cursor-pointer transition-colors ${
-                            lead.status === "won"
-                              ? "border-emerald-800/60 text-emerald-400 bg-emerald-950/10 hover:bg-emerald-950/20"
-                              : lead.status === "lost"
-                              ? "border-rose-800/60 text-rose-400 bg-rose-950/10 hover:bg-rose-950/20"
-                              : lead.status === "proposal"
-                              ? "border-amber-800/60 text-amber-400 bg-amber-950/10 hover:bg-amber-950/20"
-                              : lead.status === "contacted"
-                              ? "border-indigo-800/60 text-indigo-400 bg-indigo-950/10 hover:bg-indigo-950/20"
-                              : "border-zinc-700 text-zinc-300 bg-zinc-800/50 hover:bg-zinc-800"
-                          }`}
-                        >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="proposal">Proposal</option>
-                          <option value="won">Won (Deal Hired)</option>
-                          <option value="lost">Lost</option>
-                        </select>
-                      </div>
-
-                      {/* Contact Info */}
-                      <div className="mt-3.5 space-y-1 text-xs text-zinc-500">
-                        {lead.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-3.5 h-3.5 text-zinc-600" />
-                            <a href={`mailto:${lead.email}`} className="hover:text-zinc-300 underline underline-offset-2">
-                              {lead.email}
-                            </a>
-                          </div>
-                        )}
-                        {lead.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-3.5 h-3.5 text-zinc-600" />
-                            <a href={`tel:${lead.phone}`} className="hover:text-zinc-300">
-                              {lead.phone}
-                            </a>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Notes / Event Description */}
-                      {lead.notes && (
-                        <p className="mt-3 text-xs bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-900 text-zinc-400 italic font-serif leading-normal">
-                          &ldquo;{lead.notes}&rdquo;
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Bottom segment: Assignee & Action Buttons */}
-                    <div className="border-t border-zinc-800/80 pt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs">
-                        <UserCheck className="w-3.5 h-3.5 text-zinc-500" />
-                        {currentUser.role === "admin" ? (
-                          <select
-                            value={lead.assignedTo?._id || ""}
-                            onChange={(e) => handleUpdateAssignee(lead._id, e.target.value)}
-                            className="bg-zinc-950/60 border border-zinc-800 rounded-md px-1.5 py-0.5 text-zinc-400 outline-none text-[11px]"
-                          >
-                            <option value="">Unassigned</option>
-                            {agents.map((agent) => (
-                              <option key={agent._id} value={agent._id}>
-                                {agent.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className="text-[11px] text-zinc-500 font-medium">
-                            {lead.assignedTo ? lead.assignedTo.name : "Unassigned"}
-                          </span>
-                        )}
-                      </div>
-
-                      {currentUser.role === "admin" && (
-                        <button
-                          onClick={() => handleDeleteLead(lead._id)}
-                          className="p-1.5 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 text-zinc-600 hover:text-red-400 rounded-lg transition-colors cursor-pointer"
-                          title="Delete Lead"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Admin Agent Panel */}
-          {currentUser.role === "admin" && (
-            <div className="space-y-4">
-              <h2 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
-                <Users className="w-4.5 h-4.5 text-zinc-400" />
-                Sales Agents / Team
-              </h2>
-
-              <div className="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl p-5 space-y-4">
-                {agents.length === 0 ? (
-                  <p className="text-xs text-zinc-500 text-center">No sales agent accounts found.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {agents.map((agent) => {
-                      // Count leads assigned to this user
-                      const agentLeads = leads.filter((l) => l.assignedTo?._id === agent._id).length;
-                      const agentWon = leads.filter((l) => l.assignedTo?._id === agent._id && l.status === "won").length;
-
-                      return (
-                        <div
-                          key={agent._id}
-                          className="flex items-center justify-between p-3.5 bg-zinc-900/40 border border-zinc-800/60 rounded-xl"
-                        >
-                          <div>
-                            <p className="text-xs font-semibold text-white">{agent.name}</p>
-                            <p className="text-[10px] text-zinc-500 mt-0.5">{agent.email}</p>
-                            <div className="flex gap-2 mt-1">
-                              <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider bg-indigo-950/20 border border-indigo-900/50 px-1 rounded">
-                                {agentLeads} Leads
-                              </span>
-                              <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-950/20 border border-emerald-900/50 px-1 rounded">
-                                {agentWon} Won
-                              </span>
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={() => handleDeleteAgent(agent._id)}
-                            disabled={agent._id === currentUser?._id}
-                            className={`p-1.5 border border-transparent rounded-lg transition-colors ${
-                              agent._id === currentUser?._id
-                                ? "text-zinc-700 cursor-not-allowed"
-                                : "hover:bg-zinc-950 hover:border-zinc-800 text-zinc-500 hover:text-red-400 cursor-pointer"
-                            }`}
-                            title="Delete Agent"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+              <div className="truncate">
+                <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name}</div>
+                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">{user?.role}</div>
               </div>
             </div>
           )}
 
-        </div>
-      </main>
-
-      {/* --- ADD LEAD MODAL --- */}
-      {showLeadModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-800 w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
-            <h3 className="text-base font-bold text-white mb-4">Add CRM Lead Details</h3>
-            <form onSubmit={handleCreateLead} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Lead Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={leadName}
-                  onChange={(e) => setLeadName(e.target.value)}
-                  placeholder="e.g. Alice Smith"
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none focus:border-violet-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Company</label>
-                <input
-                  type="text"
-                  value={leadCompany}
-                  onChange={(e) => setLeadCompany(e.target.value)}
-                  placeholder="e.g. Retail Shop"
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none focus:border-violet-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Email</label>
-                  <input
-                    type="email"
-                    value={leadEmail}
-                    onChange={(e) => setLeadEmail(e.target.value)}
-                    placeholder="alice@mail.com"
-                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Phone</label>
-                  <input
-                    type="text"
-                    value={leadPhone}
-                    onChange={(e) => setLeadPhone(e.target.value)}
-                    placeholder="+1234567"
-                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Lead Status</label>
-                <select
-                  value={leadStatus}
-                  onChange={(e) => setLeadStatus(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none"
+          {/* Navigation Links Menu */}
+          <nav className="px-3 py-3 space-y-1">
+            {menuItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-sky-500/10 text-sky-600 dark:bg-sky-500 dark:text-slate-950 font-bold shadow-sm shadow-sky-500/5'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/70'
+                  }`}
+                  title={item.label}
                 >
-                  <option value="new">New</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="proposal">Proposal</option>
-                  <option value="won">Won</option>
-                  <option value="lost">Lost</option>
-                </select>
-              </div>
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                  </svg>
+                  {!sidebarCollapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                  {!sidebarCollapsed && (item.id === 'settings' || item.id === 'add_customer') && (
+                    <svg className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
-              {currentUser.role === "admin" && (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Assign To Agent</label>
-                  <select
-                    value={leadAssignedTo}
-                    onChange={(e) => setLeadAssignedTo(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none"
-                  >
-                    <option value="">Select Agent (Optional)</option>
-                    {agents.map((agent) => (
-                      <option key={agent._id} value={agent._id}>
-                        {agent.name}
-                      </option>
-                    ))}
-                  </select>
+        {/* Sidebar Bottom Controls */}
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
+          {!sidebarCollapsed ? (
+            <div className="grid grid-cols-2 gap-1 mb-1">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
+              >
+                <svg className="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>Profile</span>
+              </button>
+
+              <button
+                onClick={() => alert("Password management panel opened.")}
+                className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
+              >
+                <svg className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                <span>Password</span>
+              </button>
+            </div>
+          ) : null}
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            {!sidebarCollapsed && <span>Logout</span>}
+          </button>
+        </div>
+
+      </aside>
+
+      {/* ========================================================================= */}
+      {/* RIGHT MAIN WORKSPACE AREA */}
+      {/* ========================================================================= */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        
+        {/* TOP HEADER BAR */}
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between z-20 shrink-0 shadow-sm">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-slate-50 capitalize">
+              {activeTab.replace('_', ' ')}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-4 relative">
+            
+            {/* Theme Toggle (Light / Dark Switch) */}
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <span>Light</span>
+              <button
+                onClick={toggleTheme}
+                className={`w-11 h-6 rounded-full p-1 transition-colors duration-200 cursor-pointer flex items-center ${
+                  theme === 'dark' ? 'bg-sky-500 justify-end' : 'bg-slate-300 justify-start'
+                }`}
+              >
+                <div className="w-4 h-4 rounded-full bg-white shadow-md flex items-center justify-center text-[10px]">
+                  {theme === 'dark' ? '🌙' : '☀️'}
+                </div>
+              </button>
+            </div>
+
+            {/* Notification Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer relative"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
+              </button>
+
+              {/* Notification Popover */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-2xl z-50">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Live Notifications</span>
+                    <span className="text-[10px] text-sky-500 dark:text-sky-400 font-bold">2 Unread</span>
+                  </div>
+                  <div className="space-y-3 pt-3">
+                    <div className="text-xs p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
+                      🚨 CAM-03 No Helmet alert logged.
+                    </div>
+                    <div className="text-xs p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-400">
+                      ✅ System health check 100% OK.
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* User Profile Avatar Pill Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-full bg-sky-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
+                  {avatarInitials}
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase">{user?.role}</span>
+                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 shadow-2xl z-50 text-xs">
+                  <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                    <div className="font-bold text-slate-900 dark:text-slate-100">{user?.name}</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
+                  </div>
+                  <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-red-500 font-bold hover:bg-red-500/10 rounded-lg mt-1 transition-colors cursor-pointer">
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </header>
+
+        {/* WORKSPACE CONTENT BODY */}
+        <main className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
+
+          {/* =================================================================== */}
+          {/* 1. ADMIN ROLE TAB VIEWS */}
+          {/* =================================================================== */}
+          {currentRole === 'admin' && (
+            <>
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                  {/* Executive Stats */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Enterprise Clients</div>
+                      <div className="text-3xl font-black text-slate-900 dark:text-white">128</div>
+                      <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">↑ +14% from last month</div>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Active CCTV Camera Nodes</div>
+                      <div className="text-3xl font-black text-sky-500 dark:text-sky-400">1,420</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">99.8% Online uptime</div>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">AI Safety Alerts Processed</div>
+                      <div className="text-3xl font-black text-slate-900 dark:text-white">45,892</div>
+                      <div className="text-[11px] text-sky-500 dark:text-sky-400 font-semibold">Real-time dispatched</div>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">System Role Status</div>
+                      <div className="text-xl font-black text-red-600 dark:text-red-400 uppercase">SUPER ADMIN</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Full system access privileges</div>
+                    </div>
+                  </div>
+
+                  {/* Customer Directory Table */}
+                  <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">Enterprise Customer Directory</h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Manage client accounts, camera quotas, and billing status.</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('add_customer')}
+                        className="px-4 py-2 text-xs font-bold rounded-xl bg-sky-600 hover:bg-sky-500 text-white transition-all cursor-pointer shadow-md shadow-sky-600/10"
+                      >
+                        + Add New Customer
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-mono text-[10px] bg-slate-50/70 dark:bg-slate-900">
+                          <tr>
+                            <th className="py-3 px-4">Client ID</th>
+                            <th className="py-3 px-4">Name & Email</th>
+                            <th className="py-3 px-4">Company</th>
+                            <th className="py-3 px-4">Cameras</th>
+                            <th className="py-3 px-4">Plan Tier</th>
+                            <th className="py-3 px-4">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                          {customers.map((c) => (
+                            <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                              <td className="py-3 px-4 font-mono font-bold text-sky-500 dark:text-sky-400">{c.id}</td>
+                              <td className="py-3 px-4">
+                                <div className="font-bold text-slate-900 dark:text-slate-100">{c.name}</div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400">{c.email}</div>
+                              </td>
+                              <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{c.company}</td>
+                              <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-200">{c.cameras} Nodes</td>
+                              <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{c.plan}</td>
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  c.status === 'Active' ? 'bg-sky-500/20 text-sky-700 dark:text-sky-400' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                                }`}>
+                                  {c.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Lead Notes</label>
-                <textarea
-                  value={leadNotes}
-                  onChange={(e) => setLeadNotes(e.target.value)}
-                  placeholder="Additional inquiry specifics..."
-                  rows={3}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none resize-none"
-                />
-              </div>
+              {activeTab === 'add_customer' && (
+                <div className="max-w-2xl mx-auto border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-slate-50">Add Enterprise Customer</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Register a new client organization for CCTV AI inspection.</p>
+                  </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+                  {customerSuccessMsg && (
+                    <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
+                      ✅ {customerSuccessMsg}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleAddCustomerSubmit} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Customer Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={newCustomer.name}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                        placeholder="e.g. Pratham User"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Work Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={newCustomer.email}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                        placeholder="pratham@company.com"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Company / Organization Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={newCustomer.company}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, company: e.target.value })}
+                        placeholder="e.g. Tiera India Ltd"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Camera Licenses</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={newCustomer.cameras}
+                          onChange={(e) => setNewCustomer({ ...newCustomer, cameras: Number(e.target.value) })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Subscription Tier</label>
+                        <select
+                          value={newCustomer.plan}
+                          onChange={(e) => setNewCustomer({ ...newCustomer, plan: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                        >
+                          <option value="Standard AI">Standard AI</option>
+                          <option value="Enterprise Pro">Enterprise Pro</option>
+                          <option value="Enterprise Max">Enterprise Max</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-sky-600/20"
+                    >
+                      Save & Provision Customer Account
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {activeTab === 'settings' && (
+                <div className="max-w-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Admin System Settings</h2>
+                  <div className="space-y-4 text-xs">
+                    <div className="flex justify-between items-center py-3 border-b border-slate-200 dark:border-slate-800">
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">AI Model Detection Sensitivity</div>
+                        <div className="text-slate-500 dark:text-slate-400">Adjust confidence threshold for helmet & safety alerts.</div>
+                      </div>
+                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">95% (High Precision)</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-slate-200 dark:border-slate-800">
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">Real-time WhatsApp Webhook Gateway</div>
+                        <div className="text-slate-500 dark:text-slate-400">Automated dispatch clips to safety managers.</div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold">ENABLED</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'subscription' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4 shadow-sm">
+                    <div className="text-xs font-mono uppercase text-slate-500 dark:text-slate-400">Standard Tier</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">$499 <span className="text-xs text-slate-500 font-normal">/ mo</span></div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Up to 10 Cameras, basic helmet detection.</p>
+                  </div>
+                  <div className="p-6 rounded-2xl border border-sky-500 bg-sky-500/10 space-y-4 relative shadow-md">
+                    <span className="absolute -top-3 right-4 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-600 text-white">POPULAR</span>
+                    <div className="text-xs font-mono uppercase text-sky-500 dark:text-sky-400 font-bold">Enterprise Pro</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">$1,299 <span className="text-xs text-slate-500 font-normal">/ mo</span></div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">Up to 30 Cameras, custom AI rules + WhatsApp alerts.</p>
+                  </div>
+                  <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4 shadow-sm">
+                    <div className="text-xs font-mono uppercase text-slate-500 dark:text-slate-400">Custom Max</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">Contact Us</div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Unlimited camera nodes & dedicated GPU server cluster.</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* =================================================================== */}
+          {/* 2. USER ROLE TAB VIEWS */}
+          {/* =================================================================== */}
+          {currentRole === 'user' && (
+            <>
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Active Cameras</div>
+                      <div className="text-3xl font-black text-sky-500 dark:text-sky-400">8 Feeds</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">100% Active stream</div>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Today's Safety Violations</div>
+                      <div className="text-3xl font-black text-red-600 dark:text-red-400">3 Alerts</div>
+                      <div className="text-[11px] text-red-600 dark:text-red-400">Action required</div>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Account Subscription</div>
+                      <div className="text-xl font-black text-slate-900 dark:text-white uppercase">ENTERPRISE PRO</div>
+                      <div className="text-[11px] text-sky-500 dark:text-sky-400 font-semibold">Active · Renews next month</div>
+                    </div>
+                  </div>
+
+                  <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4">
+                    <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">Recent Security Alerts</h2>
+                    <div className="space-y-3">
+                      {events.map((evt) => (
+                        <div key={evt.id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950 flex justify-between items-center text-xs">
+                          <div className="space-y-1">
+                            <div className="font-bold text-slate-900 dark:text-slate-100">{evt.type}</div>
+                            <div className="text-slate-500 dark:text-slate-400 font-mono">{evt.camera} · {evt.time}</div>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded font-bold uppercase text-[10px] ${
+                            evt.severity === 'high' ? 'bg-red-500/20 text-red-600 dark:text-red-400' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                          }`}>
+                            {evt.severity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'live_camera' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Live CCTV Inspection Feeds</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Real-time video analytics with automated bounding boxes.</p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 font-mono text-xs font-bold flex items-center gap-1.5 animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                      LIVE FEED
+                    </span>
+                  </div>
+
+                  <div className="aspect-video w-full max-w-4xl mx-auto bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden relative flex items-center justify-around p-8 shadow-2xl">
+                    <div className="absolute top-4 left-4 font-mono text-xs text-slate-400 bg-slate-900/80 px-3 py-1 rounded border border-slate-800">
+                      CAM-03 LOGISTICS DOCK · 1080P @ 30FPS
+                    </div>
+
+                    <div className="border-2 border-cyan-400 bg-cyan-500/10 p-4 rounded-xl text-center text-xs font-mono">
+                      <div className="bg-cyan-400 text-slate-950 text-[10px] px-2 py-0.5 font-bold rounded mb-2">
+                        HELMET: OK (98%)
+                      </div>
+                      <svg className="w-16 h-16 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span className="text-slate-300">Staff #012</span>
+                    </div>
+
+                    <div className="border-2 border-red-500 bg-red-500/15 p-4 rounded-xl text-center text-xs font-mono animate-pulse">
+                      <div className="bg-red-600 text-white text-[10px] px-2 py-0.5 font-bold rounded mb-2 animate-bounce">
+                        NO HELMET DETECTED!
+                      </div>
+                      <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span className="text-red-300">Staff #044</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'subscription_detail' && (
+                <div className="max-w-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-6 shadow-sm">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Subscription Details</h2>
+                    <span className="px-3 py-1 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold text-xs">Active Plan</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block mb-1">PLAN NAME</span>
+                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Enterprise Pro</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block mb-1">CAMERA LICENSES</span>
+                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">12 / 20 Allocated</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block mb-1">BILLING CYCLE</span>
+                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Monthly ($1,299)</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block mb-1">RENEWAL DATE</span>
+                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Sept 01, 2026</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'event_history' && (
+                <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Security Event History Log</h2>
+                  <div className="space-y-3">
+                    {events.map((evt) => (
+                      <div key={evt.id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 flex justify-between items-center text-xs">
+                        <div>
+                          <div className="font-bold text-slate-900 dark:text-slate-100">{evt.type}</div>
+                          <div className="text-slate-500 dark:text-slate-400 font-mono">{evt.camera} · {evt.time}</div>
+                        </div>
+                        <span className="px-3 py-1 rounded bg-slate-200 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300">
+                          {evt.status.toUpperCase()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'profile' && (
+                <div className="max-w-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">User Account Profile</h2>
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Full Name</span>
+                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{user?.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Email</span>
+                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{user?.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Account Role</span>
+                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400 uppercase">{user?.role}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'notification' && (
+                <div className="max-w-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Notification Preferences</h2>
+                  <div className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-emerald-600" />
+                      <span>Email Alerts for High Severity Violations</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-emerald-600" />
+                      <span>WhatsApp Supervisor Dispatches</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'settings' && (
+                <div className="max-w-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">User Preferences</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Configure workspace display options.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* =================================================================== */}
+          {/* 3. DEMO ROLE TAB VIEWS */}
+          {/* =================================================================== */}
+          {currentRole === 'demo' && (
+            <div className="max-w-3xl mx-auto space-y-6">
+              
+              {upgradeMsg && (
+                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold text-center animate-bounce">
+                  {upgradeMsg}
+                </div>
+              )}
+
+              <div className="border border-amber-500/30 bg-amber-500/10 rounded-2xl p-8 text-center space-y-6 shadow-lg">
+                <div className="w-14 h-14 rounded-full bg-amber-500/20 text-amber-500 dark:text-amber-400 flex items-center justify-center mx-auto text-2xl font-bold">
+                  ⚡
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50">Demo Session Active</h2>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                    You are exploring the CoreWatch enterprise console in Demo Preview mode. Click below to upgrade this demo account to a full <strong>USER</strong> account instantly!
+                  </p>
+                </div>
+
                 <button
-                  type="button"
-                  onClick={() => setShowLeadModal(false)}
-                  className="px-4 py-2 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                  onClick={handleUpgradeDemoToUser}
+                  disabled={upgrading}
+                  className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 text-white font-black text-xs uppercase tracking-wider hover:from-sky-500 hover:to-cyan-400 transition-all shadow-xl shadow-sky-600/20 cursor-pointer disabled:opacity-50"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingLead}
-                  className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl text-xs font-semibold text-white cursor-pointer"
-                >
-                  {submittingLead ? "Adding..." : "Add Lead"}
+                  {upgrading ? 'Upgrading Role...' : '⚡ Upgrade Account to Full USER Role'}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* --- ADD AGENT MODAL (ADMIN ONLY) --- */}
-      {showAgentModal && currentUser.role === "admin" && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-800 w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
-            <h3 className="text-base font-bold text-white mb-4">Add Sales Agent Account</h3>
-            <form onSubmit={handleCreateAgent} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Agent Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="e.g. John Agent"
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none focus:border-violet-500"
-                />
+              <div className="border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl p-12 text-center text-xs text-slate-500 dark:text-slate-400 font-mono">
+                📌 Demo workspace canvas. Additional custom interactive demos will be loaded here.
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Email Address *</label>
-                <input
-                  type="email"
-                  required
-                  value={agentEmail}
-                  onChange={(e) => setAgentEmail(e.target.value)}
-                  placeholder="agent@company.com"
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none"
-                />
-              </div>
+            </div>
+          )}
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Password *</label>
-                <input
-                  type="password"
-                  required
-                  value={agentPassword}
-                  onChange={(e) => setAgentPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">System Role</label>
-                <select
-                  value={agentRole}
-                  onChange={(e) => setAgentRole(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 outline-none"
-                >
-                  <option value="user">Sales User</option>
-                  <option value="admin">System Admin</option>
-                </select>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAgentModal(false)}
-                  className="px-4 py-2 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingAgent}
-                  className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl text-xs font-semibold text-white cursor-pointer"
-                >
-                  {submittingAgent ? "Creating..." : "Create User"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        </main>
+      </div>
 
     </div>
   );

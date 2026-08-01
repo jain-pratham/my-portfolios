@@ -23,7 +23,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     }
 
     // Determine final role - fallback to 'user' if not explicitly provided or invalid
-    const finalRole = role === "admin" ? "admin" : "user";
+    const finalRole = ["admin", "user", "demo"].includes(role) ? role : "user";
 
     const user = await User.create({
       name,
@@ -110,6 +110,44 @@ export const getMe = async (req: any, res: Response): Promise<void> => {
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : "Server error retrieving profile",
+    });
+  }
+};
+
+// @desc    Update or upgrade user role (e.g. demo to user)
+// @route   PUT /api/auth/role
+// @access  Private
+export const updateUserRole = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { role } = req.body;
+    if (!["admin", "user", "demo"].includes(role)) {
+      res.status(400).json({ success: false, message: "Invalid role. Allowed roles: admin, user, demo" });
+      return;
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Role successfully updated to ${role}`,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : "Server error updating user role",
     });
   }
 };

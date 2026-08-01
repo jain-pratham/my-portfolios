@@ -4,17 +4,20 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [loginSuccess, setLoginSuccess] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
+    companyName: '',
     password: '',
-    rememberMe: false,
+    confirmPassword: '',
+    role: 'user' as 'admin' | 'user' | 'demo',
+    agreeTerms: false,
   });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -36,10 +39,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) {
-      setErrorMessage('Please enter both email and password.');
+    if (!formData.fullName || !formData.email || !formData.password || !formData.agreeTerms) return;
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage('Passwords do not match.');
       return;
     }
 
@@ -47,35 +52,33 @@ export default function LoginPage() {
     setErrorMessage(null);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          name: formData.fullName,
           email: formData.email,
           password: formData.password,
+          role: formData.role,
         }),
       });
 
       const data = await res.json();
 
-      if (res.ok && data.success && data.data) {
-        setLoginSuccess(true);
-        setUserRole(data.data.role);
-
-        // Store JWT token and authenticated user details
+      if (res.ok && data.success) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data));
 
-        // Auto redirect after brief success indicator
+        setSignupSuccess(true);
         setTimeout(() => {
           router.push('/dashboard');
-        }, 800);
+        }, 1000);
       } else {
-        setErrorMessage(data.message || 'Invalid credentials. Please check your email and password.');
+        setErrorMessage(data.message || 'Registration failed.');
       }
     } catch (err) {
-      console.error('Authentication network error:', err);
-      setErrorMessage('Unable to connect to authentication server. Please ensure backend is running.');
+      console.error('Registration server connection error:', err);
+      setErrorMessage('Unable to connect to backend server. Please ensure the backend server is running.');
     } finally {
       setIsSubmitting(false);
     }
@@ -90,12 +93,12 @@ export default function LoginPage() {
       <div className="w-full lg:w-5/12 flex flex-col justify-between p-6 sm:p-12 z-10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-900/60 shadow-xl overflow-y-auto">
         
         {/* Navigation Bar inside panel */}
-        <div className="flex justify-between items-center w-full mb-8">
+        <div className="flex justify-between items-center w-full mb-6">
           <Link href="/" className="flex items-center gap-2 group">
             <svg className="w-4 h-4 text-zinc-400 group-hover:text-sky-500 transition-colors transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors">
+            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
               Back to home
             </span>
           </Link>
@@ -118,8 +121,8 @@ export default function LoginPage() {
         </div>
 
         {/* Auth Box Center Container */}
-        <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto space-y-6">
-          <div className="space-y-2">
+        <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto space-y-4 py-4">
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-base shadow-md shadow-sky-500/10">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,63 +132,128 @@ export default function LoginPage() {
               </div>
               <span className="text-md font-bold tracking-tight text-zinc-900 dark:text-zinc-50">CoreWatch</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50">Login In to Dashboard</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Enter your credentials to access your enterprise role workspace.</p>
+            <h1 className="text-xl font-black tracking-tight text-zinc-950 dark:text-zinc-50">Create Account</h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Choose your role and register to access CoreWatch.</p>
           </div>
 
           {errorMessage && (
-            <div className="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-medium leading-relaxed">
-              ⚠️ {errorMessage}
+            <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-medium">
+              {errorMessage}
             </div>
           )}
 
-          {!loginSuccess ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+          {!signupSuccess ? (
+            <form onSubmit={handleSignupSubmit} className="space-y-3">
               
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400" htmlFor="login-email">Work Email</label>
+              {/* Full Name */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide" htmlFor="signup-name">Full Name</label>
                 <input 
-                  id="login-email"
+                  id="signup-name"
+                  type="text"
+                  required
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  placeholder="John Doe"
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200"
+                />
+              </div>
+
+              {/* Work Email */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400" htmlFor="signup-email">WORK EMAIL</label>
+                <input 
+                  id="signup-email"
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="name@company.com"
-                  className="w-full px-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200"
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200"
                 />
               </div>
 
-              {/* Password */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400" htmlFor="login-password">Password</label>
-                  <a href="#" onClick={(e) => { e.preventDefault(); alert("Password reset request sent to administrator."); }} className="text-[11px] font-semibold text-sky-500 dark:text-sky-400 hover:underline">
-                    Forgot password?
-                  </a>
+              {/* ROLE SELECTOR (Admin, User, Demo) */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">SELECT ACCOUNT ROLE</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'user' })}
+                    className={`py-2 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                      formData.role === 'user'
+                        ? 'border-sky-500 bg-sky-500/20 text-sky-400 ring-2 ring-sky-500/30'
+                        : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    🟢 User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'demo' })}
+                    className={`py-2 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                      formData.role === 'demo'
+                        ? 'border-amber-500 bg-amber-500/20 text-amber-400 ring-2 ring-amber-500/30'
+                        : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    🟡 Demo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'admin' })}
+                    className={`py-2 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                      formData.role === 'admin'
+                        ? 'border-red-500 bg-red-500/20 text-red-400 ring-2 ring-red-500/30'
+                        : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    🔴 Admin
+                  </button>
                 </div>
-                <input 
-                  id="login-password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200"
-                />
               </div>
 
-              {/* Remember me */}
-              <div className="flex items-center gap-2">
+              {/* Password inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400" htmlFor="signup-password">PASSWORD</label>
+                  <input 
+                    id="signup-password"
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400" htmlFor="signup-confirm">CONFIRM PASSWORD</label>
+                  <input 
+                    id="signup-confirm"
+                    type="password"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200"
+                  />
+                </div>
+              </div>
+
+              {/* Agree terms */}
+              <div className="flex items-start gap-2 pt-1">
                 <input 
-                  id="remember-me"
+                  id="agree-terms"
                   type="checkbox"
-                  checked={formData.rememberMe}
-                  onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
-                  className="w-4 h-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 dark:bg-zinc-950 dark:border-zinc-800"
+                  required
+                  checked={formData.agreeTerms}
+                  onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
+                  className="w-4 h-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 mt-0.5"
                 />
-                <label htmlFor="remember-me" className="text-xs text-zinc-500 dark:text-zinc-400 select-none">
-                  Keep me signed in for 30 days
+                <label htmlFor="agree-terms" className="text-xs text-zinc-500 dark:text-zinc-400 select-none leading-relaxed">
+                  I agree to the{' '}
+                  <a href="#" onClick={(e) => { e.preventDefault(); alert("Displaying Terms of Service..."); }} className="text-sky-500 dark:text-sky-400 hover:underline">Terms of Service</a>.
                 </label>
               </div>
 
@@ -198,7 +266,7 @@ export default function LoginPage() {
                 {isSubmitting ? (
                   <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                 ) : (
-                  'Sign In'
+                  `Register as ${formData.role.toUpperCase()}`
                 )}
               </button>
 
@@ -208,9 +276,9 @@ export default function LoginPage() {
               <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center mx-auto text-xl font-bold animate-bounce">
                 ✓
               </div>
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Authenticated</h2>
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Registration Complete</h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Role classified: <span className="font-bold text-sky-400 uppercase">{userRole}</span>. Loading dashboard...
+                Welcome to CoreWatch! Redirecting to your {formData.role.toUpperCase()} dashboard...
               </p>
               <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             </div>
@@ -218,15 +286,15 @@ export default function LoginPage() {
 
           {/* Footnotes Redirect */}
           <p className="text-center text-xs text-zinc-500 dark:text-zinc-400 pt-2">
-            Don't have an enterprise account?{' '}
-            <Link href="/signup" className="font-bold text-sky-500 dark:text-sky-400 hover:underline">
-              Sign up
+            Already have an account?{' '}
+            <Link href="/login" className="font-bold text-sky-500 dark:text-sky-400 hover:underline">
+              Sign in
             </Link>
           </p>
         </div>
 
         {/* Footer info */}
-        <div className="text-center text-[10px] text-zinc-400 dark:text-zinc-500 font-mono mt-8">
+        <div className="text-center text-[10px] text-zinc-400 dark:text-zinc-500 font-mono mt-6">
           CoreWatch Enterprise Auth Security v2.14 · DPDP Compliant
         </div>
 
