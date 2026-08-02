@@ -65,9 +65,13 @@ export const connectDB = async (): Promise<void> => {
     await seedDefaultUsers();
   } catch (error) {
     console.warn(`MongoDB Connection failed: ${error instanceof Error ? error.message : error}`);
-    console.log("Spinning up In-Memory MongoDB Server fallback...");
+    console.log("Spinning up In-Memory MongoDB Server fallback on port 27017...");
     try {
       mongod = await MongoMemoryServer.create({
+        instance: {
+          port: 27017,
+          dbName: "corewatch"
+        },
         binary: {
           version: "5.0.28"
         }
@@ -75,11 +79,26 @@ export const connectDB = async (): Promise<void> => {
       const uri = mongod.getUri();
       console.log(`In-Memory MongoDB Server running at: ${uri}`);
       await mongoose.connect(uri);
-      console.log("MongoDB Connected: (In-Memory Database)");
+      console.log("MongoDB Connected: (In-Memory Database on port 27017)");
       await seedDefaultUsers();
     } catch (err) {
-      console.error(`In-Memory MongoDB failed to start: ${err instanceof Error ? err.message : err}`);
-      process.exit(1);
+      console.warn(`Failed to start In-Memory MongoDB on port 27017: ${err instanceof Error ? err.message : err}`);
+      console.log("Retrying In-Memory MongoDB Server on a random port...");
+      try {
+        mongod = await MongoMemoryServer.create({
+          binary: {
+            version: "5.0.28"
+          }
+        });
+        const uri = mongod.getUri();
+        console.log(`In-Memory MongoDB Server running at: ${uri}`);
+        await mongoose.connect(uri);
+        console.log("MongoDB Connected: (In-Memory Database on random port)");
+        await seedDefaultUsers();
+      } catch (randomErr) {
+        console.error(`In-Memory MongoDB failed to start: ${randomErr instanceof Error ? randomErr.message : randomErr}`);
+        process.exit(1);
+      }
     }
   }
 };

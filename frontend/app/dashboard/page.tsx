@@ -43,6 +43,12 @@ export default function DashboardPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  // Next.js MongoDB multi-tenant camera & alert state
+  const [cameras, setCameras] = useState<any[]>([]);
+  const [dbAlerts, setDbAlerts] = useState<any[]>([]);
+  const [activeCameraKey, setActiveCameraKey] = useState<string>('');
+  const [copySuccess, setCopySuccess] = useState(false);
+
   // New Customer Form State (Admin)
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -53,7 +59,7 @@ export default function DashboardPage() {
   });
   const [customerSuccessMsg, setCustomerSuccessMsg] = useState<string | null>(null);
 
-  // Initial Sample Data
+  // Initial Sample Data (Admin/Fallback)
   const [customers, setCustomers] = useState<Customer[]>([
     { id: 'CUST-101', name: 'Pratham Jain', email: 'pratham@tieraindia.com', company: 'Tiera India Logistics', cameras: 12, plan: 'Enterprise Pro', status: 'Active' },
     { id: 'CUST-102', name: 'Aarya Sharma', email: 'aarya@visagroup.org', company: 'Aarya Visa Services', cameras: 8, plan: 'Standard AI', status: 'Active' },
@@ -61,15 +67,9 @@ export default function DashboardPage() {
     { id: 'CUST-104', name: 'Rohan Gupta', email: 'rohan@guptawarehouse.com', company: 'Gupta Warehousing NCR', cameras: 16, plan: 'Standard AI', status: 'Pending' },
   ]);
 
-  const [events, setEvents] = useState<SecurityEvent[]>([
-    { id: 'EVT-901', type: 'No Helmet Violation', camera: 'CAM-03 Warehouse', severity: 'high', time: '10 mins ago', status: 'unread' },
-    { id: 'EVT-902', type: 'Unclassified Person Detected', camera: 'CAM-01 Main Gate', severity: 'medium', time: '25 mins ago', status: 'unread' },
-    { id: 'EVT-903', type: 'Perimeter Intrusion', camera: 'CAM-04 Fence Line', severity: 'high', time: '1 hour ago', status: 'read' },
-    { id: 'EVT-904', type: 'Safety Mask Compliant', camera: 'CAM-02 Dock B', severity: 'low', time: '2 hours ago', status: 'read' },
-  ]);
-
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+  // 1. Initial User Authentication Check
   useEffect(() => {
     // Theme detection
     const isDark = document.documentElement.classList.contains('dark');
@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
     try {
       const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
+      setUser({ ...parsedUser, token: storedToken });
 
       // Verify profile with backend API
       fetch(`${API_URL}/api/auth/me`, {
@@ -108,6 +108,75 @@ export default function DashboardPage() {
       router.push('/login');
     }
   }, [router, API_URL]);
+
+  // 2. Fetch Cameras and Poll Alerts from MongoDB (scoped to user)
+  useEffect(() => {
+    if (!user || !user.token) return;
+    const token = user.token;
+
+    const provisionFirstCamera = async () => {
+      try {
+        const res = await fetch('/api/cameras', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ locationName: "Main Shop" })
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setCameras([data.data]);
+          setActiveCameraKey(data.data.cameraKey);
+        }
+      } catch (err) {
+        console.log("Failed to provision default camera:", err);
+      }
+    };
+
+    const loadCameras = async () => {
+      try {
+        const res = await fetch('/api/cameras', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setCameras(data.data);
+          if (data.data.length > 0) {
+            setActiveCameraKey(data.data[0].cameraKey);
+          } else {
+            // No camera provisioned yet, create one automatically
+            await provisionFirstCamera();
+          }
+        }
+      } catch (err) {
+        console.log("Failed to load cameras:", err);
+      }
+    };
+
+    const loadAlerts = async () => {
+      try {
+        const res = await fetch('/api/alerts', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setDbAlerts(data.data);
+        }
+      } catch (err) {
+        console.log("Failed to load alerts:", err);
+      }
+    };
+
+    loadCameras();
+    loadAlerts();
+
+    // Poll Next.js Alerts API every 3 seconds
+    const interval = setInterval(loadAlerts, 3000);
+    return () => clearInterval(interval);
+
+  }, [user]);
+
 
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -671,37 +740,80 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
                       <div className="text-xs text-slate-500 dark:text-slate-400">Active Cameras</div>
-                      <div className="text-3xl font-black text-sky-500 dark:text-sky-400">8 Feeds</div>
+                      <div className="text-3xl font-black text-sky-500 dark:text-sky-400">{cameras.length} Feeds</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">100% Active stream</div>
                     </div>
                     <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
                       <div className="text-xs text-slate-500 dark:text-slate-400">Today's Safety Violations</div>
-                      <div className="text-3xl font-black text-red-600 dark:text-red-400">3 Alerts</div>
+                      <div className="text-3xl font-black text-red-600 dark:text-red-400">{dbAlerts.length} Alerts</div>
                       <div className="text-[11px] text-red-600 dark:text-red-400">Action required</div>
                     </div>
                     <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
                       <div className="text-xs text-slate-500 dark:text-slate-400">Account Subscription</div>
-                      <div className="text-xl font-black text-slate-900 dark:text-white uppercase">ENTERPRISE PRO</div>
+                      <div className="text-xl font-black text-slate-900 dark:text-white uppercase">{user?.role === 'admin' ? 'Enterprise Max' : 'Enterprise Pro'}</div>
                       <div className="text-[11px] text-sky-500 dark:text-sky-400 font-semibold">Active · Renews next month</div>
+                    </div>
+
+                    {/* Camera Key Card (Main Dashboard View) */}
+                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-3 col-span-1 sm:col-span-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-bold block">Your Active Camera Key</span>
+                        <span className="text-[10px] text-slate-400">Configure this key inside your Python detector.py script</span>
+                      </div>
+                      {activeCameraKey ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={activeCameraKey}
+                            className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-mono font-bold focus:outline-none"
+                          />
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(activeCameraKey);
+                              setCopySuccess(true);
+                              setTimeout(() => setCopySuccess(false), 2000);
+                            }}
+                            className="px-4 py-2 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white transition-all cursor-pointer shadow-md"
+                          >
+                            {copySuccess ? "Copied!" : "Copy Key"}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-slate-500 font-mono">Generating key...</div>
+                      )}
                     </div>
                   </div>
 
                   <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4">
-                    <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">Recent Security Alerts</h2>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">Recent Security Alerts (Live Feed)</h2>
                     <div className="space-y-3">
-                      {events.map((evt) => (
-                        <div key={evt.id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950 flex justify-between items-center text-xs">
-                          <div className="space-y-1">
-                            <div className="font-bold text-slate-900 dark:text-slate-100">{evt.type}</div>
-                            <div className="text-slate-500 dark:text-slate-400 font-mono">{evt.camera} · {evt.time}</div>
+                      {dbAlerts.length > 0 ? (
+                        dbAlerts.slice(0, 10).map((alert) => (
+                          <div key={alert._id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950 flex gap-4 items-center text-xs">
+                            {alert.imageUrl && (
+                              <img 
+                                src={alert.imageUrl} 
+                                alt="Alert Snapshot" 
+                                className="w-16 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0" 
+                              />
+                            )}
+                            <div className="space-y-1 flex-1 min-w-0">
+                              <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{alert.message}</div>
+                              <div className="text-slate-500 dark:text-slate-400 font-mono truncate">
+                                Camera: {alert.cameraKey} · {new Date(alert.timestamp).toLocaleTimeString()} ({new Date(alert.timestamp).toLocaleDateString()})
+                              </div>
+                            </div>
+                            <span className="px-2.5 py-1 rounded font-bold uppercase text-[10px] bg-red-500/20 text-red-600 dark:text-red-400 shrink-0">
+                              HIGH
+                            </span>
                           </div>
-                          <span className={`px-2.5 py-1 rounded font-bold uppercase text-[10px] ${
-                            evt.severity === 'high' ? 'bg-red-500/20 text-red-600 dark:text-red-400' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
-                          }`}>
-                            {evt.severity}
-                          </span>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-xs text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
+                          No alerts received yet. Please configure your camera settings.
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -779,17 +891,32 @@ export default function DashboardPage() {
                 <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Security Event History Log</h2>
                   <div className="space-y-3">
-                    {events.map((evt) => (
-                      <div key={evt.id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 flex justify-between items-center text-xs">
-                        <div>
-                          <div className="font-bold text-slate-900 dark:text-slate-100">{evt.type}</div>
-                          <div className="text-slate-500 dark:text-slate-400 font-mono">{evt.camera} · {evt.time}</div>
+                    {dbAlerts.length > 0 ? (
+                      dbAlerts.map((alert) => (
+                        <div key={alert._id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 flex gap-4 items-center text-xs">
+                          {alert.imageUrl && (
+                            <img 
+                              src={alert.imageUrl} 
+                              alt="Alert Snapshot" 
+                              className="w-16 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0" 
+                            />
+                          )}
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{alert.message}</div>
+                            <div className="text-slate-500 dark:text-slate-400 font-mono truncate">
+                              Camera: {alert.cameraKey} · {new Date(alert.timestamp).toLocaleTimeString()} ({new Date(alert.timestamp).toLocaleDateString()})
+                            </div>
+                          </div>
+                          <span className="px-3 py-1 rounded bg-slate-200 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                            RECEIVED
+                          </span>
                         </div>
-                        <span className="px-3 py-1 rounded bg-slate-200 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300">
-                          {evt.status.toUpperCase()}
-                        </span>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-xs text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
+                        No historical events found.
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
@@ -831,9 +958,88 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">User Preferences</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Configure workspace display options.</p>
+                <div className="max-w-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-6 shadow-sm">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Camera Configuration</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Connect your Python camera stream to this account.</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block">Your Unique Camera Access Key</label>
+                    {activeCameraKey ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={activeCameraKey}
+                          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-mono font-bold focus:outline-none"
+                        />
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(activeCameraKey);
+                            setCopySuccess(true);
+                            setTimeout(() => setCopySuccess(false), 2000);
+                          }}
+                          className="px-4 py-2.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white transition-all cursor-pointer shadow-md"
+                        >
+                          {copySuccess ? "Copied!" : "Copy Key"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate-500">Generating camera access key...</div>
+                    )}
+                    <p className="text-[10px] text-slate-400 leading-normal">
+                      Instructions: Copy this key and paste it inside the `cameraKey` configuration of your Python stream client (`detector.py`).
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Register Another Camera Location</h3>
+                    <button
+                      onClick={async () => {
+                        const name = prompt("Enter location name (e.g. Back Alley, Main Entrance):");
+                        if (!name) return;
+                        try {
+                          const res = await fetch('/api/cameras', {
+                            method: 'POST',
+                            headers: { 
+                              'Content-Type': 'application/json',
+                              Authorization: `Bearer ${user?.token}` 
+                            },
+                            body: JSON.stringify({ locationName: name })
+                          });
+                          const data = await res.json();
+                          if (data.success && data.data) {
+                            setCameras([data.data, ...cameras]);
+                            setActiveCameraKey(data.data.cameraKey);
+                            alert(`Successfully provisioned new key: ${data.data.cameraKey}`);
+                          }
+                        } catch (err) {
+                          alert("Failed to provision new camera key.");
+                        }
+                      }}
+                      className="px-4 py-2 text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                    >
+                      + Add Camera Location
+                    </button>
+
+                    {cameras.length > 1 && (
+                      <div className="space-y-1 pt-2">
+                        <span className="text-[10px] font-bold text-slate-400 block">Switch Active Camera Key:</span>
+                        <select
+                          value={activeCameraKey}
+                          onChange={(e) => setActiveCameraKey(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-semibold"
+                        >
+                          {cameras.map((cam) => (
+                            <option key={cam._id} value={cam.cameraKey}>
+                              {cam.locationName} ({cam.cameraKey})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </>
