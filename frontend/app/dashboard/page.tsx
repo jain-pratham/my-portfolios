@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [tabLoaded, setTabLoaded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState<string | null>(null);
@@ -108,6 +109,21 @@ export default function DashboardPage() {
       router.push('/login');
     }
   }, [router, API_URL]);
+
+  // Persist active tab selection across refreshes
+  useEffect(() => {
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+    setTabLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (tabLoaded) {
+      localStorage.setItem('activeTab', activeTab);
+    }
+  }, [activeTab, tabLoaded]);
 
   // 2. Fetch Cameras and Poll Alerts from MongoDB (scoped to user)
   useEffect(() => {
@@ -258,7 +274,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
           <p className="text-slate-400 text-xs font-mono">Loading CoreWatch Workspace...</p>
         </div>
       </div>
@@ -295,82 +311,104 @@ export default function DashboardPage() {
   // Helper for User Badge Styling
   const roleBadgeStyle = {
     admin: { label: 'COMPANY ADMIN', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
-    user: { label: 'STANDARD USER', color: 'bg-sky-500/20 text-sky-400 border-sky-500/30' },
+    user: { label: 'STANDARD USER', color: 'bg-brand-blue/20 text-brand-blue dark:text-brand-light-blue border-brand-blue/30' },
     demo: { label: 'DEMO TESTER', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   }[currentRole];
 
   const avatarInitials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CW';
 
   return (
-    <div className={`min-h-screen flex font-sans ${theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} transition-colors duration-200`}>
+    <div className={`min-h-screen flex font-sans bg-background text-foreground transition-colors duration-200 ${theme === 'dark' ? 'dark' : ''}`}>
       
       {/* ========================================================================= */}
       {/* LEFT SIDEBAR (Deep Corporate Navy Slate) */}
+      {/* ========================================================================      {/* LEFT SIDEBAR (Deep Corporate Navy Slate) */}
       {/* ========================================================================= */}
-      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 z-30 select-none shadow-xl`}>
+      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-sidebar border-r border-sidebar-border/35 text-white flex flex-col justify-between transition-all duration-300 z-30 select-none shadow-2xl`}>
         
         <div>
           {/* Top Brand & Logo */}
-          <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+          <div className={`h-16 ${sidebarCollapsed ? 'px-2' : 'px-3.5'} flex items-center justify-between border-b border-sidebar-border/30`}>
             {!sidebarCollapsed ? (
-              <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-wider uppercase">
-                {currentRole === 'admin' ? 'CoreWatch Admin' : currentRole === 'demo' ? 'CoreWatch Demo' : 'CoreWatch User'}
-              </span>
-            ) : (
-              <div className="w-8 h-8 rounded-lg bg-sky-500 text-slate-950 flex items-center justify-center font-black text-sm shrink-0 shadow-lg shadow-sky-500/20 mx-auto">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+              <div className="flex items-center gap-2 h-full">
+                <img 
+                  src="/logo.png" 
+                  alt="CoreWatch Logo" 
+                  className="h-[56px] w-[56px] object-cover object-left shrink-0 -ml-3"
+                />
+                <span className="font-extrabold text-[13px] text-white tracking-wider uppercase leading-tight">
+                  {currentRole === 'admin' ? 'CoreWatch Admin' : currentRole === 'demo' ? 'CoreWatch Demo' : 'CoreWatch User'}
+                </span>
               </div>
+            ) : (
+              <img 
+                src="/logo.png" 
+                alt="CoreWatch Logo" 
+                className="h-[50px] w-[50px] object-cover object-left shrink-0 animate-pulse -ml-2"
+              />
             )}
 
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="text-white/60 hover:text-white hover:bg-white/10 p-1 rounded-md transition-all cursor-pointer"
               title="Toggle Sidebar"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
               </svg>
             </button>
           </div>
 
           {/* User Profile Card inside Sidebar Header */}
-          {!sidebarCollapsed && (
-            <div className="p-5 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
-              <div className="w-12 h-12 rounded-full bg-pink-600 text-white font-black text-sm flex items-center justify-center relative shrink-0 shadow-md">
+          {!sidebarCollapsed ? (
+            <div className="px-4 py-3 flex items-center gap-3 border-b border-sidebar-border/30 bg-black/10">
+              <div className="w-9 h-9 rounded-full bg-brand-blue text-white font-black text-xs flex items-center justify-center relative shrink-0 shadow-md border border-white/10">
                 {avatarInitials}
-                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-brand-navy animate-ping"></span>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-brand-navy"></span>
               </div>
-              <div className="truncate">
-                <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name}</div>
-                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">{user?.role}</div>
+              <div className="truncate min-w-0 flex-1">
+                <div className="text-sm font-bold text-white truncate leading-tight">{user?.name}</div>
+                <div className="text-[10px] font-bold text-brand-gold uppercase tracking-wider mt-0.5 leading-none">{user?.role}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-3 border-b border-sidebar-border/30 bg-black/10 flex justify-center">
+              <div className="w-9 h-9 rounded-full bg-brand-blue text-white font-black text-xs flex items-center justify-center relative shrink-0 border border-white/10">
+                {avatarInitials}
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-brand-navy"></span>
               </div>
             </div>
           )}
 
           {/* Navigation Links Menu */}
-          <nav className="px-3 py-3 space-y-1">
+          <nav className="px-3 py-4 space-y-1.5">
             {menuItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`w-full relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
                     isActive
-                      ? 'bg-sky-500/10 text-sky-600 dark:bg-sky-500 dark:text-slate-950 font-bold shadow-sm shadow-sky-500/5'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/70'
+                      ? 'bg-white/10 text-white font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
                   }`}
                   title={item.label}
                 >
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {/* Left Accent indicator line on Active */}
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-gold" />
+                  )}
+                  
+                  <svg className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-brand-gold' : 'text-white/60'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                   </svg>
+                  
                   {!sidebarCollapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                  
                   {!sidebarCollapsed && (item.id === 'settings' || item.id === 'add_customer') && (
-                    <svg className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-brand-gold' : 'text-white/40'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   )}
@@ -381,14 +419,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Sidebar Bottom Controls */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
+        <div className="p-3 border-t border-sidebar-border/30 space-y-1.5 bg-black/10">
           {!sidebarCollapsed ? (
-            <div className="grid grid-cols-2 gap-1 mb-1">
+            <div className="grid grid-cols-2 gap-1.5 mb-1">
               <button
                 onClick={() => setActiveTab('profile')}
-                className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
+                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'profile'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
               >
-                <svg className="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <span>Profile</span>
@@ -396,24 +438,51 @@ export default function DashboardPage() {
 
               <button
                 onClick={() => alert("Password management panel opened.")}
-                className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
+                className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-[11px] font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
               >
-                <svg className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                 </svg>
                 <span>Password</span>
               </button>
             </div>
-          ) : null}
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex items-center justify-center p-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'profile'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+                title="Profile"
+              >
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => alert("Password management panel opened.")}
+                className="flex items-center justify-center p-2 rounded-lg text-xs font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                title="Password"
+              >
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </button>
+            </div>
+          )}
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors cursor-pointer"
+            title="Logout"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            {!sidebarCollapsed && <span>Logout</span>}
+            {!sidebarCollapsed && <span className="text-left font-bold">Logout</span>}
           </button>
         </div>
 
@@ -423,24 +492,22 @@ export default function DashboardPage() {
       {/* RIGHT MAIN WORKSPACE AREA */}
       {/* ========================================================================= */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
-        {/* TOP HEADER BAR */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between z-20 shrink-0 shadow-sm">
+           {/* TOP HEADER BAR */}
+        <header className="h-16 border-b border-border bg-card/85 backdrop-blur-md px-6 flex items-center justify-between z-20 shrink-0 shadow-sm">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-slate-900 dark:text-slate-50 capitalize">
+            <h1 className="text-lg font-bold text-foreground capitalize">
               {activeTab.replace('_', ' ')}
             </h1>
           </div>
 
           <div className="flex items-center gap-4 relative">
-            
-            {/* Theme Toggle (Light / Dark Switch) */}
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                   {/* Theme Toggle (Light / Dark Switch) */}
+            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               <span>Light</span>
               <button
                 onClick={toggleTheme}
                 className={`w-11 h-6 rounded-full p-1 transition-colors duration-200 cursor-pointer flex items-center ${
-                  theme === 'dark' ? 'bg-sky-500 justify-end' : 'bg-slate-300 justify-start'
+                  theme === 'dark' ? 'bg-brand-blue justify-end' : 'bg-slate-300 justify-start'
                 }`}
               >
                 <div className="w-4 h-4 rounded-full bg-white shadow-md flex items-center justify-center text-[10px]">
@@ -453,7 +520,7 @@ export default function DashboardPage() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer relative"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer relative"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -463,10 +530,10 @@ export default function DashboardPage() {
 
               {/* Notification Popover */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-2xl z-50">
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Live Notifications</span>
-                    <span className="text-[10px] text-sky-500 dark:text-sky-400 font-bold">2 Unread</span>
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border bg-card p-4 shadow-2xl z-50">
+                  <div className="flex justify-between items-center pb-2 border-b border-border">
+                    <span className="text-xs font-bold text-foreground">Live Notifications</span>
+                    <span className="text-[10px] text-brand-blue dark:text-brand-light-blue font-bold">2 Unread</span>
                   </div>
                   <div className="space-y-3 pt-3">
                     <div className="text-xs p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
@@ -484,22 +551,22 @@ export default function DashboardPage() {
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors cursor-pointer"
               >
-                <div className="w-6 h-6 rounded-full bg-sky-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-brand-blue text-white font-black text-[10px] flex items-center justify-center">
                   {avatarInitials}
                 </div>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase">{user?.role}</span>
+                <span className="text-xs font-bold text-foreground uppercase">{user?.role}</span>
                 <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 shadow-2xl z-50 text-xs">
-                  <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                    <div className="font-bold text-slate-900 dark:text-slate-100">{user?.name}</div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
+                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card p-2 shadow-2xl z-50 text-xs">
+                  <div className="px-3 py-2 border-b border-border">
+                    <div className="font-bold text-foreground">{user?.name}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{user?.email}</div>
                   </div>
                   <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-red-500 font-bold hover:bg-red-500/10 rounded-lg mt-1 transition-colors cursor-pointer">
                     Sign Out
@@ -513,6 +580,10 @@ export default function DashboardPage() {
 
         {/* WORKSPACE CONTENT BODY */}
         <main className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
+          <div className="min-h-[400px]"></div>
+          {/* Disable all page contents as requested, keeping the page structure intact */}
+          {false && (
+            <>
 
           {/* =================================================================== */}
           {/* 1. ADMIN ROLE TAB VIEWS */}
@@ -523,38 +594,38 @@ export default function DashboardPage() {
                 <div className="space-y-6">
                   {/* Executive Stats */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
-                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Enterprise Clients</div>
-                      <div className="text-3xl font-black text-slate-900 dark:text-white">128</div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">Total Enterprise Clients</div>
+                      <div className="text-3xl font-black text-foreground">128</div>
                       <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">↑ +14% from last month</div>
                     </div>
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
-                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Active CCTV Camera Nodes</div>
-                      <div className="text-3xl font-black text-sky-500 dark:text-sky-400">1,420</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">99.8% Online uptime</div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">Active CCTV Camera Nodes</div>
+                      <div className="text-3xl font-black text-brand-blue dark:text-brand-light-blue">1,420</div>
+                      <div className="text-[11px] text-muted-foreground">99.8% Online uptime</div>
                     </div>
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
-                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">AI Safety Alerts Processed</div>
-                      <div className="text-3xl font-black text-slate-900 dark:text-white">45,892</div>
-                      <div className="text-[11px] text-sky-500 dark:text-sky-400 font-semibold">Real-time dispatched</div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">AI Safety Alerts Processed</div>
+                      <div className="text-3xl font-black text-foreground">45,892</div>
+                      <div className="text-[11px] text-brand-blue dark:text-brand-light-blue font-semibold">Real-time dispatched</div>
                     </div>
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
-                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">System Role Status</div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">System Role Status</div>
                       <div className="text-xl font-black text-red-600 dark:text-red-400 uppercase">SUPER ADMIN</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Full system access privileges</div>
+                      <div className="text-[11px] text-muted-foreground">Full system access privileges</div>
                     </div>
                   </div>
 
                   {/* Customer Directory Table */}
-                  <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4">
+                  <div className="border border-border bg-card rounded-2xl p-6 shadow-sm space-y-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">Enterprise Customer Directory</h2>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Manage client accounts, camera quotas, and billing status.</p>
+                        <h2 className="text-base font-bold text-foreground">Enterprise Customer Directory</h2>
+                        <p className="text-xs text-muted-foreground">Manage client accounts, camera quotas, and billing status.</p>
                       </div>
                       <button
                         onClick={() => setActiveTab('add_customer')}
-                        className="px-4 py-2 text-xs font-bold rounded-xl bg-sky-600 hover:bg-sky-500 text-white transition-all cursor-pointer shadow-md shadow-sky-600/10"
+                        className="px-4 py-2 text-xs font-bold rounded-xl bg-brand-blue hover:bg-brand-blue/90 text-white transition-all cursor-pointer shadow-md shadow-brand-blue/10"
                       >
                         + Add New Customer
                       </button>
@@ -562,7 +633,7 @@ export default function DashboardPage() {
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
-                        <thead className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-mono text-[10px] bg-slate-50/70 dark:bg-slate-900">
+                        <thead className="border-b border-border text-muted-foreground uppercase font-mono text-[10px] bg-muted/50">
                           <tr>
                             <th className="py-3 px-4">Client ID</th>
                             <th className="py-3 px-4">Name & Email</th>
@@ -572,20 +643,20 @@ export default function DashboardPage() {
                             <th className="py-3 px-4">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                        <tbody className="divide-y divide-border/60 font-medium">
                           {customers.map((c) => (
-                            <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
-                              <td className="py-3 px-4 font-mono font-bold text-sky-500 dark:text-sky-400">{c.id}</td>
+                            <tr key={c.id} className="hover:bg-muted/30 transition-colors">
+                              <td className="py-3 px-4 font-mono font-bold text-brand-blue dark:text-brand-light-blue">{c.id}</td>
                               <td className="py-3 px-4">
-                                <div className="font-bold text-slate-900 dark:text-slate-100">{c.name}</div>
-                                <div className="text-[10px] text-slate-500 dark:text-slate-400">{c.email}</div>
+                                <div className="font-bold text-foreground">{c.name}</div>
+                                <div className="text-[10px] text-muted-foreground">{c.email}</div>
                               </td>
-                              <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{c.company}</td>
-                              <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-200">{c.cameras} Nodes</td>
-                              <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{c.plan}</td>
+                              <td className="py-3 px-4 text-foreground/80">{c.company}</td>
+                              <td className="py-3 px-4 font-bold text-foreground/90">{c.cameras} Nodes</td>
+                              <td className="py-3 px-4 text-foreground/80">{c.plan}</td>
                               <td className="py-3 px-4">
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  c.status === 'Active' ? 'bg-sky-500/20 text-sky-700 dark:text-sky-400' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                                  c.status === 'Active' ? 'bg-brand-blue/20 text-brand-blue dark:text-brand-light-blue' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
                                 }`}>
                                   {c.status}
                                 </span>
@@ -600,10 +671,10 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'add_customer' && (
-                <div className="max-w-2xl mx-auto border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
+                <div className="max-w-2xl mx-auto border border-border bg-card rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
                   <div>
-                    <h2 className="text-xl font-black text-slate-900 dark:text-slate-50">Add Enterprise Customer</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Register a new client organization for CCTV AI inspection.</p>
+                    <h2 className="text-xl font-black text-foreground">Add Enterprise Customer</h2>
+                    <p className="text-xs text-muted-foreground">Register a new client organization for CCTV AI inspection.</p>
                   </div>
 
                   {customerSuccessMsg && (
@@ -614,59 +685,59 @@ export default function DashboardPage() {
 
                   <form onSubmit={handleAddCustomerSubmit} className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Customer Full Name</label>
+                      <label className="text-xs font-bold text-muted-foreground">Customer Full Name</label>
                       <input
                         type="text"
                         required
                         value={newCustomer.name}
                         onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                         placeholder="e.g. Pratham User"
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Work Email Address</label>
+                      <label className="text-xs font-bold text-muted-foreground">Work Email Address</label>
                       <input
                         type="email"
                         required
                         value={newCustomer.email}
                         onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
                         placeholder="pratham@company.com"
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Company / Organization Name</label>
+                      <label className="text-xs font-bold text-muted-foreground">Company / Organization Name</label>
                       <input
                         type="text"
                         required
                         value={newCustomer.company}
                         onChange={(e) => setNewCustomer({ ...newCustomer, company: e.target.value })}
                         placeholder="e.g. Tiera India Ltd"
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Camera Licenses</label>
+                        <label className="text-xs font-bold text-muted-foreground">Camera Licenses</label>
                         <input
                           type="number"
                           min={1}
                           max={100}
                           value={newCustomer.cameras}
                           onChange={(e) => setNewCustomer({ ...newCustomer, cameras: Number(e.target.value) })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Subscription Tier</label>
+                        <label className="text-xs font-bold text-muted-foreground">Subscription Tier</label>
                         <select
                           value={newCustomer.plan}
                           onChange={(e) => setNewCustomer({ ...newCustomer, plan: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-emerald-500"
+                          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
                         >
                           <option value="Standard AI">Standard AI</option>
                           <option value="Enterprise Pro">Enterprise Pro</option>
@@ -686,20 +757,20 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Admin System Settings</h2>
+                <div className="max-w-3xl border border-border bg-card rounded-2xl p-6 space-y-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-foreground">Admin System Settings</h2>
                   <div className="space-y-4 text-xs">
-                    <div className="flex justify-between items-center py-3 border-b border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-between items-center py-3 border-b border-border">
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-slate-100">AI Model Detection Sensitivity</div>
-                        <div className="text-slate-500 dark:text-slate-400">Adjust confidence threshold for helmet & safety alerts.</div>
+                        <div className="font-bold text-foreground">AI Model Detection Sensitivity</div>
+                        <div className="text-muted-foreground">Adjust confidence threshold for helmet & safety alerts.</div>
                       </div>
                       <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">95% (High Precision)</span>
                     </div>
-                    <div className="flex justify-between items-center py-3 border-b border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-between items-center py-3 border-b border-border">
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-slate-100">Real-time WhatsApp Webhook Gateway</div>
-                        <div className="text-slate-500 dark:text-slate-400">Automated dispatch clips to safety managers.</div>
+                        <div className="font-bold text-foreground">Real-time WhatsApp Webhook Gateway</div>
+                        <div className="text-muted-foreground">Automated dispatch clips to safety managers.</div>
                       </div>
                       <span className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold">ENABLED</span>
                     </div>
@@ -709,21 +780,21 @@ export default function DashboardPage() {
 
               {activeTab === 'subscription' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4 shadow-sm">
-                    <div className="text-xs font-mono uppercase text-slate-500 dark:text-slate-400">Standard Tier</div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">$499 <span className="text-xs text-slate-500 font-normal">/ mo</span></div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Up to 10 Cameras, basic helmet detection.</p>
+                  <div className="p-6 rounded-2xl border border-border bg-card space-y-4 shadow-sm">
+                    <div className="text-xs font-mono uppercase text-muted-foreground">Standard Tier</div>
+                    <div className="text-2xl font-black text-foreground">$499 <span className="text-xs text-muted-foreground font-normal">/ mo</span></div>
+                    <p className="text-xs text-muted-foreground">Up to 10 Cameras, basic helmet detection.</p>
                   </div>
-                  <div className="p-6 rounded-2xl border border-sky-500 bg-sky-500/10 space-y-4 relative shadow-md">
-                    <span className="absolute -top-3 right-4 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-600 text-white">POPULAR</span>
-                    <div className="text-xs font-mono uppercase text-sky-500 dark:text-sky-400 font-bold">Enterprise Pro</div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">$1,299 <span className="text-xs text-slate-500 font-normal">/ mo</span></div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300">Up to 30 Cameras, custom AI rules + WhatsApp alerts.</p>
+                  <div className="p-6 rounded-2xl border border-brand-blue bg-brand-blue/10 space-y-4 relative shadow-md">
+                    <span className="absolute -top-3 right-4 px-2 py-0.5 rounded text-[10px] font-bold bg-brand-blue text-white">POPULAR</span>
+                    <div className="text-xs font-mono uppercase text-brand-blue dark:text-brand-light-blue font-bold">Enterprise Pro</div>
+                    <div className="text-2xl font-black text-foreground">$1,299 <span className="text-xs text-muted-foreground font-normal">/ mo</span></div>
+                    <p className="text-xs text-muted-foreground">Up to 30 Cameras, custom AI rules + WhatsApp alerts.</p>
                   </div>
-                  <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4 shadow-sm">
-                    <div className="text-xs font-mono uppercase text-slate-500 dark:text-slate-400">Custom Max</div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">Contact Us</div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Unlimited camera nodes & dedicated GPU server cluster.</p>
+                  <div className="p-6 rounded-2xl border border-border bg-card space-y-4 shadow-sm">
+                    <div className="text-xs font-mono uppercase text-muted-foreground">Custom Max</div>
+                    <div className="text-2xl font-black text-foreground">Contact Us</div>
+                    <p className="text-xs text-muted-foreground">Unlimited camera nodes & dedicated GPU server cluster.</p>
                   </div>
                 </div>
               )}
@@ -738,27 +809,27 @@ export default function DashboardPage() {
               {activeTab === 'dashboard' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Active Cameras</div>
-                      <div className="text-3xl font-black text-sky-500 dark:text-sky-400">{cameras.length} Feeds</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">100% Active stream</div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground">Active Cameras</div>
+                      <div className="text-3xl font-black text-brand-blue dark:text-brand-light-blue">{cameras.length} Feeds</div>
+                      <div className="text-[11px] text-muted-foreground">100% Active stream</div>
                     </div>
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Today's Safety Violations</div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground">Today's Safety Violations</div>
                       <div className="text-3xl font-black text-red-600 dark:text-red-400">{dbAlerts.length} Alerts</div>
                       <div className="text-[11px] text-red-600 dark:text-red-400">Action required</div>
                     </div>
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Account Subscription</div>
-                      <div className="text-xl font-black text-slate-900 dark:text-white uppercase">{user?.role === 'admin' ? 'Enterprise Max' : 'Enterprise Pro'}</div>
-                      <div className="text-[11px] text-sky-500 dark:text-sky-400 font-semibold">Active · Renews next month</div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground">Account Subscription</div>
+                      <div className="text-xl font-black text-foreground uppercase">{user?.role === 'admin' ? 'Enterprise Max' : 'Enterprise Pro'}</div>
+                      <div className="text-[11px] text-brand-blue dark:text-brand-light-blue font-semibold">Active · Renews next month</div>
                     </div>
 
                     {/* Camera Key Card (Main Dashboard View) */}
-                    <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-3 col-span-1 sm:col-span-3">
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-3 col-span-1 sm:col-span-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500 dark:text-slate-400 font-bold block">Your Active Camera Key</span>
-                        <span className="text-[10px] text-slate-400">Configure this key inside your Python detector.py script</span>
+                        <span className="text-xs text-muted-foreground font-bold block">Your Active Camera Key</span>
+                        <span className="text-[10px] text-muted-foreground">Configure this key inside your Python detector.py script</span>
                       </div>
                       {activeCameraKey ? (
                         <div className="flex gap-2">
@@ -766,7 +837,7 @@ export default function DashboardPage() {
                             type="text"
                             readOnly
                             value={activeCameraKey}
-                            className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-mono font-bold focus:outline-none"
+                            className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground text-xs font-mono font-bold focus:outline-none"
                           />
                           <button
                             onClick={() => {
@@ -774,33 +845,33 @@ export default function DashboardPage() {
                               setCopySuccess(true);
                               setTimeout(() => setCopySuccess(false), 2000);
                             }}
-                            className="px-4 py-2 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white transition-all cursor-pointer shadow-md"
+                            className="px-4 py-2 rounded-lg text-xs font-bold bg-brand-blue hover:bg-brand-blue/90 text-white transition-all cursor-pointer shadow-md"
                           >
                             {copySuccess ? "Copied!" : "Copy Key"}
                           </button>
                         </div>
                       ) : (
-                        <div className="text-xs text-slate-500 font-mono">Generating key...</div>
+                        <div className="text-xs text-muted-foreground font-mono">Generating key...</div>
                       )}
                     </div>
                   </div>
 
-                  <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4">
-                    <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">Recent Security Alerts (Live Feed)</h2>
+                  <div className="border border-border bg-card rounded-2xl p-6 shadow-sm space-y-4">
+                    <h2 className="text-base font-bold text-foreground">Recent Security Alerts (Live Feed)</h2>
                     <div className="space-y-3">
                       {dbAlerts.length > 0 ? (
                         dbAlerts.slice(0, 10).map((alert) => (
-                          <div key={alert._id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950 flex gap-4 items-center text-xs">
+                          <div key={alert._id} className="p-4 rounded-xl border border-border bg-background/60 flex gap-4 items-center text-xs">
                             {alert.imageUrl && (
                               <img 
                                 src={alert.imageUrl} 
                                 alt="Alert Snapshot" 
-                                className="w-16 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0" 
+                                className="w-16 h-12 object-cover rounded-lg border border-border shrink-0" 
                               />
                             )}
                             <div className="space-y-1 flex-1 min-w-0">
-                              <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{alert.message}</div>
-                              <div className="text-slate-500 dark:text-slate-400 font-mono truncate">
+                              <div className="font-bold text-foreground truncate">{alert.message}</div>
+                              <div className="text-muted-foreground font-mono truncate">
                                 Camera: {alert.cameraKey} · {new Date(alert.timestamp).toLocaleTimeString()} ({new Date(alert.timestamp).toLocaleDateString()})
                               </div>
                             </div>
@@ -810,7 +881,7 @@ export default function DashboardPage() {
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-6 text-xs text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
+                        <div className="text-center py-6 text-xs text-muted-foreground border border-dashed border-border rounded-xl">
                           No alerts received yet. Please configure your camera settings.
                         </div>
                       )}
@@ -864,7 +935,7 @@ export default function DashboardPage() {
                 <div className="max-w-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-6 shadow-sm">
                   <div className="flex justify-between items-center">
                     <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Subscription Details</h2>
-                    <span className="px-3 py-1 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold text-xs">Active Plan</span>
+                    <span className="px-3 py-1 rounded bg-brand-gold/20 text-brand-gold font-bold text-xs">Active Plan</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                     <div>
@@ -873,7 +944,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <span className="text-slate-500 dark:text-slate-400 block mb-1">CAMERA LICENSES</span>
-                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">12 / 20 Allocated</span>
+                      <span className="font-bold text-sm text-brand-blue dark:text-brand-light-blue">12 / 20 Allocated</span>
                     </div>
                     <div>
                       <span className="text-slate-500 dark:text-slate-400 block mb-1">BILLING CYCLE</span>
@@ -935,7 +1006,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <span className="text-slate-500 dark:text-slate-400 block">Account Role</span>
-                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400 uppercase">{user?.role}</span>
+                      <span className="font-bold text-sm text-brand-gold uppercase">{user?.role}</span>
                     </div>
                   </div>
                 </div>
@@ -946,11 +1017,11 @@ export default function DashboardPage() {
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Notification Preferences</h2>
                   <div className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-emerald-600" />
+                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-brand-blue" />
                       <span>Email Alerts for High Severity Violations</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-emerald-600" />
+                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-brand-blue" />
                       <span>WhatsApp Supervisor Dispatches</span>
                     </label>
                   </div>
@@ -958,21 +1029,21 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-6 shadow-sm">
+                <div className="max-w-xl border border-border bg-card rounded-2xl p-6 space-y-6 shadow-sm">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Camera Configuration</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Connect your Python camera stream to this account.</p>
+                    <h2 className="text-lg font-bold text-foreground">Camera Configuration</h2>
+                    <p className="text-xs text-muted-foreground">Connect your Python camera stream to this account.</p>
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block">Your Unique Camera Access Key</label>
+                    <label className="text-xs font-bold text-muted-foreground block">Your Unique Camera Access Key</label>
                     {activeCameraKey ? (
                       <div className="flex gap-2">
                         <input
                           type="text"
                           readOnly
                           value={activeCameraKey}
-                          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-mono font-bold focus:outline-none"
+                          className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-mono font-bold focus:outline-none"
                         />
                         <button
                           onClick={() => {
@@ -980,21 +1051,21 @@ export default function DashboardPage() {
                             setCopySuccess(true);
                             setTimeout(() => setCopySuccess(false), 2000);
                           }}
-                          className="px-4 py-2.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white transition-all cursor-pointer shadow-md"
+                          className="px-4 py-2.5 rounded-xl text-xs font-bold bg-brand-blue hover:bg-brand-blue/90 text-white transition-all cursor-pointer shadow-md"
                         >
                           {copySuccess ? "Copied!" : "Copy Key"}
                         </button>
                       </div>
                     ) : (
-                      <div className="text-xs text-slate-500">Generating camera access key...</div>
+                      <div className="text-xs text-muted-foreground">Generating camera access key...</div>
                     )}
-                    <p className="text-[10px] text-slate-400 leading-normal">
+                    <p className="text-[10px] text-muted-foreground leading-normal">
                       Instructions: Copy this key and paste it inside the `cameraKey` configuration of your Python stream client (`detector.py`).
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
-                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Register Another Camera Location</h3>
+                  <div className="pt-4 border-t border-border space-y-4">
+                    <h3 className="text-xs font-bold text-foreground">Register Another Camera Location</h3>
                     <button
                       onClick={async () => {
                         const name = prompt("Enter location name (e.g. Back Alley, Main Entrance):");
@@ -1018,18 +1089,18 @@ export default function DashboardPage() {
                           alert("Failed to provision new camera key.");
                         }
                       }}
-                      className="px-4 py-2 text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                      className="px-4 py-2 text-xs font-bold border border-border hover:bg-muted rounded-xl transition-all cursor-pointer text-foreground"
                     >
                       + Add Camera Location
                     </button>
 
                     {cameras.length > 1 && (
                       <div className="space-y-1 pt-2">
-                        <span className="text-[10px] font-bold text-slate-400 block">Switch Active Camera Key:</span>
+                        <span className="text-[10px] font-bold text-muted-foreground block">Switch Active Camera Key:</span>
                         <select
                           value={activeCameraKey}
                           onChange={(e) => setActiveCameraKey(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-semibold"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-blue"
                         >
                           {cameras.map((cam) => (
                             <option key={cam._id} value={cam.cameraKey}>
@@ -1063,8 +1134,8 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50">Demo Session Active</h2>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                  <h2 className="text-2xl font-black text-foreground">Demo Session Active</h2>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
                     You are exploring the CoreWatch enterprise console in Demo Preview mode. Click below to upgrade this demo account to a full <strong>USER</strong> account instantly!
                   </p>
                 </div>
@@ -1072,19 +1143,20 @@ export default function DashboardPage() {
                 <button
                   onClick={handleUpgradeDemoToUser}
                   disabled={upgrading}
-                  className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 text-white font-black text-xs uppercase tracking-wider hover:from-sky-500 hover:to-cyan-400 transition-all shadow-xl shadow-sky-600/20 cursor-pointer disabled:opacity-50"
+                  className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-brand-gold to-brand-light-gold text-brand-navy font-black text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-xl shadow-brand-gold/20 cursor-pointer disabled:opacity-50"
                 >
                   {upgrading ? 'Upgrading Role...' : '⚡ Upgrade Account to Full USER Role'}
                 </button>
               </div>
 
-              <div className="border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl p-12 text-center text-xs text-slate-500 dark:text-slate-400 font-mono">
+              <div className="border border-dashed border-border rounded-2xl p-12 text-center text-xs text-muted-foreground font-mono">
                 📌 Demo workspace canvas. Additional custom interactive demos will be loaded here.
               </div>
 
             </div>
           )}
-
+            </>
+          )}
         </main>
       </div>
 

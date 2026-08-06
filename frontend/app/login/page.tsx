@@ -121,12 +121,11 @@ export default function LoginPage() {
         <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto space-y-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-base shadow-md shadow-sky-500/10">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="CoreWatch Logo" 
+                className="h-12 w-auto object-contain shrink-0"
+              />
               <span className="text-md font-bold tracking-tight text-zinc-900 dark:text-zinc-50">CoreWatch</span>
             </div>
             <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50">Login In to Dashboard</h1>

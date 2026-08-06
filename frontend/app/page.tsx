@@ -689,37 +689,38 @@ export default function CoreWatchLandingPage() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none"></div>
 
       {/* HEADER NAVBAR */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 border-b ${scrolled ? 'backdrop-blur-md bg-white/80 dark:bg-zinc-950/80 shadow-md border-zinc-200/50 dark:border-zinc-800/60' : 'bg-transparent border-transparent'}`}>
+      <header className={`sticky top-0 z-50 transition-all duration-300 border-b ${scrolled ? 'backdrop-blur-lg bg-brand-offwhite/95 dark:bg-brand-dark-navy/95 shadow-md border-brand-navy/10 dark:border-brand-navy/40' : 'bg-transparent border-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           
           {/* Logo Branding */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => scrollToSection('hero')}>
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white shadow-lg shadow-emerald-500/20">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+            <div className="relative">
+              <img 
+                src="/logo.png" 
+                alt="CoreWatch Logo" 
+                className="h-16 w-auto object-contain"
+              />
               {/* Pulse Indicator */}
-              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border border-zinc-905"></span>
+              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 z-10">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-gold/75 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-brand-gold border border-zinc-950"></span>
               </span>
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">CoreWatch</span>
-              <span className="block text-[9px] font-bold text-emerald-500 tracking-widest uppercase">Live AI Analytics</span>
+              <span className="text-xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite">CoreWatch</span>
+              <span className="block text-[9px] font-bold text-brand-gold tracking-widest uppercase">Live AI Analytics</span>
             </div>
           </div>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-8">
-            <button onClick={() => scrollToSection('how-it-works')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer">How it works</button>
-            <button onClick={() => scrollToSection('capabilities')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer">Solutions</button>
-            <button onClick={() => scrollToSection('industries')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer">Industries</button>
-            <button onClick={() => scrollToSection('deployment')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer">Deployment</button>
-            <button onClick={() => scrollToSection('faq')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer">FAQ</button>
-            <button onClick={() => scrollToSection('locations')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer">About</button>
-            <button onClick={() => scrollToSection('talk-to-us')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer">Talk to us</button>
+            <button onClick={() => scrollToSection('how-it-works')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer">How it works</button>
+            <button onClick={() => scrollToSection('capabilities')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer">Solutions</button>
+            <button onClick={() => scrollToSection('industries')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer">Industries</button>
+            <button onClick={() => scrollToSection('deployment')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer">Deployment</button>
+            <button onClick={() => scrollToSection('faq')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer">FAQ</button>
+            <button onClick={() => scrollToSection('locations')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer">About</button>
+            <button onClick={() => scrollToSection('talk-to-us')} className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer">Talk to us</button>
           </nav>
 
           {/* Theme Switcher & Main CTA */}
@@ -743,18 +744,18 @@ export default function CoreWatchLandingPage() {
               )}
             </button>
 
-            {/* Sign In link */}
+            {/* Login link */}
             <a 
               href="/login" 
-              className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer mr-2"
+              className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-brand-blue dark:hover:text-brand-gold transition-colors cursor-pointer mr-2"
             >
-              Sign in
+              Login
             </a>
 
             {/* Book A Demo button */}
             <button 
               onClick={() => scrollToSection('talk-to-us')} 
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-md shadow-zinc-950/10 hover:shadow-zinc-950/20 active:scale-98 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-brand-navy hover:bg-brand-dark-navy text-white hover:scale-[1.02] active:scale-98 transition-all shadow-md shadow-brand-navy/10 hover:shadow-brand-navy/20 cursor-pointer"
             >
               Book a demo
             </button>
@@ -796,7 +797,7 @@ export default function CoreWatchLandingPage() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-4 py-4 space-y-3 shadow-xl">
+          <div className="lg:hidden bg-brand-offwhite dark:bg-brand-dark-navy border-b border-brand-navy/10 dark:border-brand-navy/40 px-4 py-4 space-y-3 shadow-xl">
             <button onClick={() => scrollToSection('how-it-works')} className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer">How it works</button>
             <button onClick={() => scrollToSection('capabilities')} className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer">Solutions</button>
             <button onClick={() => scrollToSection('industries')} className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer">Industries</button>
@@ -804,8 +805,8 @@ export default function CoreWatchLandingPage() {
             <button onClick={() => scrollToSection('faq')} className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer">FAQ</button>
             <button onClick={() => scrollToSection('locations')} className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer">About</button>
             <button onClick={() => scrollToSection('talk-to-us')} className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer">Talk to us</button>
-            <a href="/login" className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer border-t border-zinc-150 dark:border-zinc-800 pt-3">Sign in</a>
-            <button onClick={() => scrollToSection('talk-to-us')} className="block w-full py-2.5 text-center text-base font-bold bg-emerald-600 text-white rounded-lg cursor-pointer">Book a demo</button>
+            <a href="/login" className="block w-full text-left py-2 text-base font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer border-t border-zinc-150 dark:border-zinc-800 pt-3">Login</a>
+            <button onClick={() => scrollToSection('talk-to-us')} className="block w-full py-2.5 text-center text-base font-bold bg-brand-blue text-white rounded-lg cursor-pointer">Book a demo</button>
           </div>
         )}
       </header>
@@ -819,15 +820,15 @@ export default function CoreWatchLandingPage() {
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left z-10">
               
               {/* Product Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wider uppercase animate-fade-in mx-auto lg:mx-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-brand-gold/30 bg-brand-gold/10 text-brand-navy dark:text-brand-light-gold text-xs font-semibold tracking-wider uppercase animate-fade-in mx-auto lg:mx-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
                 AI Video Analytics · Made in India
               </div>
               
               {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none text-zinc-900 dark:text-zinc-50">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none text-brand-navy dark:text-brand-offwhite">
                 Every camera,<br className="hidden sm:inline" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400 dark:from-emerald-400 dark:to-emerald-200 font-extrabold">an AI inspector.</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-brand-gold font-extrabold">an AI inspector.</span>
               </h1>
               
               {/* Subheading */}
@@ -839,7 +840,7 @@ export default function CoreWatchLandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
                 <button 
                   onClick={() => scrollToSection('talk-to-us')} 
-                  className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-brand-gold to-brand-light-gold text-brand-navy hover:brightness-110 shadow-lg shadow-brand-gold/20 hover:shadow-brand-gold/30 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Book a demo 
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -851,7 +852,7 @@ export default function CoreWatchLandingPage() {
                   href="https://wa.me/919871329295"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all flex items-center justify-center gap-2 shadow-sm"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold bg-white dark:bg-brand-navy border border-zinc-200 dark:border-brand-navy/60 text-zinc-800 dark:text-brand-offwhite hover:bg-zinc-50 dark:hover:bg-brand-navy/80 transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
                   <svg className="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.46h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -868,15 +869,15 @@ export default function CoreWatchLandingPage() {
                   { label: "Rapid deployment", desc: "Live in days, not months" },
                   { label: "COREWATCH · LIVE", desc: "Continuous monitoring 24/7", pulse: true }
                 ].map((item, idx) => (
-                  <div key={idx} className="border border-zinc-200/50 dark:border-zinc-800/80 bg-white/40 dark:bg-zinc-900/30 p-3.5 rounded-xl backdrop-blur-xs flex flex-col justify-between">
+                  <div key={idx} className="border border-zinc-200/50 dark:border-brand-navy/60 bg-white/65 dark:bg-brand-navy/60 p-3.5 rounded-xl backdrop-blur-sm flex flex-col justify-between">
                     <div className="flex items-center gap-1.5 mb-1">
                       {item.pulse && (
                         <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-gold/75 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-gold"></span>
                         </span>
                       )}
-                      <span className="text-[11px] font-black uppercase text-zinc-900 dark:text-zinc-100 tracking-wider leading-tight">
+                      <span className="text-[11px] font-black uppercase text-brand-navy dark:text-brand-offwhite tracking-wider leading-tight">
                         {item.label}
                       </span>
                     </div>
@@ -938,13 +939,13 @@ export default function CoreWatchLandingPage() {
       </section>
 
       {/* HOW IT WORKS SECTION */}
-      <section id="how-it-works" className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-zinc-900 bg-zinc-100/40 dark:bg-zinc-950/20">
+      <section id="how-it-works" className="py-20 md:py-28 border-t border-brand-navy/10 dark:border-brand-navy/40 bg-brand-offwhite/50 dark:bg-brand-navy/15">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Section Headers */}
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">DEPLOYMENT LIFECYCLE</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mt-2 mb-4">
+            <span className="text-xs font-black tracking-wider text-brand-gold uppercase">DEPLOYMENT LIFECYCLE</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite mt-2 mb-4">
               Live in days, not months
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400">
@@ -960,7 +961,7 @@ export default function CoreWatchLandingPage() {
                 title: "Connect your cameras",
                 description: "We connect to your existing CCTV or NVR over the local network. No rip-and-replace, no new camera hardware required.",
                 icon: (
-                  <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 )
@@ -970,7 +971,7 @@ export default function CoreWatchLandingPage() {
                 title: "AI watches 24/7",
                 description: "Our AI analyses every feed continuously — detecting people, zones, objects and events you define, without fatigue or dropouts.",
                 icon: (
-                  <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
@@ -981,21 +982,21 @@ export default function CoreWatchLandingPage() {
                 title: "Get instant alerts + proof",
                 description: "The moment something matters, you get an alert with a short video clip as proof — on your dashboard, phone, or WhatsApp.",
                 icon: (
-                  <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                 )
               }
             ].map((stepObj, idx) => (
-              <div key={idx} className="relative border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
-                <div className="absolute -top-5 left-8 w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center font-mono text-xs font-black shadow-md">
+              <div key={idx} className="relative border border-zinc-200/60 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 p-8 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                <div className="absolute -top-5 left-8 w-10 h-10 rounded-xl bg-brand-navy dark:bg-brand-offwhite text-white dark:text-brand-navy flex items-center justify-center font-mono text-xs font-black shadow-md">
                   {stepObj.icon}
                 </div>
                 <div className="mt-4 space-y-3">
-                  <span className="text-[10px] font-black text-emerald-500 dark:text-emerald-400 tracking-widest block">
+                  <span className="text-[10px] font-black text-brand-gold tracking-widest block">
                     {stepObj.step}
                   </span>
-                  <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
+                  <h3 className="text-xl font-bold text-brand-navy dark:text-brand-offwhite group-hover:text-brand-blue dark:group-hover:text-brand-gold transition-colors">
                     {stepObj.title}
                   </h3>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
@@ -1010,13 +1011,13 @@ export default function CoreWatchLandingPage() {
       </section>
 
       {/* CAPABILITIES SECTION */}
-      <section id="capabilities" className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-zinc-900">
+      <section id="capabilities" className="py-20 md:py-28 border-t border-brand-navy/10 dark:border-brand-navy/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Section Headers */}
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">Detection Catalog</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mt-2 mb-4">
+            <span className="text-xs font-black tracking-wider text-brand-gold uppercase">Detection Catalog</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite mt-2 mb-4">
               One platform, many eyes
             </h2>
             <p className="text-zinc-505 dark:text-zinc-400">
@@ -1040,27 +1041,27 @@ export default function CoreWatchLandingPage() {
                   }}
                   className={`p-6 rounded-2xl border text-left cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                     isSelected 
-                      ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-lg shadow-emerald-500/5' 
-                      : 'border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 hover:border-zinc-300 dark:hover:border-zinc-700/85 hover:shadow-md'
+                      ? 'border-brand-blue bg-brand-blue/5 dark:bg-brand-blue/10 shadow-lg shadow-brand-blue/5' 
+                      : 'border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 hover:border-brand-blue/60 dark:hover:border-brand-gold/60 hover:shadow-md'
                   }`}
                 >
                   {/* Decorative background glow for selected card */}
                   {isSelected && (
-                    <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-emerald-500/20 blur-xl"></div>
+                    <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-brand-blue/20 blur-xl"></div>
                   )}
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
                       <span className={`text-[9px] font-black tracking-widest px-2 py-0.5 rounded ${
                         isSelected 
-                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                          ? 'bg-brand-blue/20 text-brand-blue dark:text-brand-light-blue' 
                           : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
                       }`}>
                         {cap.badge}
                       </span>
                       {isSelected && (
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span className="text-[10px] text-brand-blue dark:text-brand-light-blue font-bold flex items-center gap-1">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-blue animate-ping"></span>
                           Preview Active
                         </span>
                       )}
@@ -1068,7 +1069,7 @@ export default function CoreWatchLandingPage() {
                     
                     <div>
                       <h3 className={`text-lg font-bold transition-colors ${
-                        isSelected ? 'text-emerald-600 dark:text-emerald-300' : 'text-zinc-950 dark:text-zinc-50'
+                        isSelected ? 'text-brand-blue dark:text-brand-light-blue' : 'text-brand-navy dark:text-brand-offwhite'
                       }`}>
                         {cap.title}
                       </h3>
@@ -1077,7 +1078,7 @@ export default function CoreWatchLandingPage() {
                       </p>
                     </div>
 
-                    <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 group-hover:underline">
+                    <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-brand-blue dark:text-brand-light-blue group-hover:underline">
                       <span>Interactive Live Demo</span>
                       <svg className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -1096,10 +1097,9 @@ export default function CoreWatchLandingPage() {
       <section id="industries" className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-zinc-900 bg-zinc-100/40 dark:bg-zinc-950/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Section Headers */}
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">Operational Scopes</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mt-2 mb-4">
+          {/* Sect          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="text-xs font-black tracking-wider text-brand-gold uppercase">Operational Scopes</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite mt-2 mb-4">
               Built for every space worth watching
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400">
@@ -1111,19 +1111,19 @@ export default function CoreWatchLandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Sidebar Tab Triggers */}
-            <div className="lg:col-span-4 flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 pb-4 lg:pb-0 scrollbar-none border-b lg:border-b-0 lg:border-r border-zinc-200/60 dark:border-zinc-800">
+            <div className="lg:col-span-4 flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 pb-4 lg:pb-0 scrollbar-none border-b lg:border-b-0 lg:border-r border-zinc-200/60 dark:border-brand-navy/60">
               {industries.map((ind, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveIndustry(idx)}
                   className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold whitespace-nowrap transition-all flex items-center justify-between cursor-pointer ${
                     activeIndustry === idx 
-                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-bold' 
-                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-900'
+                      ? 'bg-brand-navy dark:bg-brand-offwhite text-white dark:text-brand-navy font-bold shadow-md shadow-brand-navy/10' 
+                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-brand-navy/20'
                   }`}
                 >
                   <span>{ind.name}</span>
-                  <svg className={`w-4 h-4 hidden lg:inline transform transition-transform ${activeIndustry === idx ? 'translate-x-1 text-emerald-500' : 'text-zinc-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className={`w-4 h-4 hidden lg:inline transform transition-transform ${activeIndustry === idx ? 'translate-x-1 text-brand-gold' : 'text-zinc-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -1131,11 +1131,11 @@ export default function CoreWatchLandingPage() {
             </div>
 
             {/* Main Content Area */}
-            <div className="lg:col-span-8 bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/80 shadow-md">
+            <div className="lg:col-span-8 bg-white dark:bg-brand-navy p-8 rounded-2xl border border-zinc-200/60 dark:border-brand-navy/60 shadow-md">
               <div className="space-y-6">
                 <div>
-                  <span className="text-[10px] font-black uppercase text-emerald-500 dark:text-emerald-400 tracking-wider">Sector Specific Suite</span>
-                  <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">
+                  <span className="text-[10px] font-black uppercase text-brand-gold tracking-wider">Sector Specific Suite</span>
+                  <h3 className="text-2xl font-bold text-brand-navy dark:text-brand-offwhite mt-1">
                     {industries[activeIndustry].name} Compliance
                   </h3>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 font-medium">
@@ -1143,12 +1143,12 @@ export default function CoreWatchLandingPage() {
                   </p>
                 </div>
 
-                <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
+                <div className="border-t border-zinc-200 dark:border-brand-navy/60 pt-6">
                   <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest mb-4">ACTIVE DETECTION MODULES</h4>
                   <ul className="space-y-3.5">
                     {industries[activeIndustry].features.map((feat, fidx) => (
                       <li key={fidx} className="flex items-start gap-3 text-sm text-zinc-700 dark:text-zinc-300">
-                        <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-brand-blue/10 text-brand-blue dark:text-brand-light-blue flex items-center justify-center">
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                           </svg>
@@ -1159,11 +1159,11 @@ export default function CoreWatchLandingPage() {
                   </ul>
                 </div>
 
-                <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="pt-4 border-t border-zinc-200 dark:border-brand-navy/60 flex flex-col sm:flex-row gap-4 items-center justify-between">
                   <span className="text-[11px] font-mono text-zinc-400">Model customized for {industries[activeIndustry].name}</span>
                   <button 
                     onClick={() => scrollToSection('talk-to-us')} 
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/20 border border-emerald-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-brand-blue/10 text-brand-blue dark:text-brand-light-blue hover:bg-brand-blue/20 border border-brand-blue/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>Request demo for {industries[activeIndustry].name}</span>
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1180,7 +1180,7 @@ export default function CoreWatchLandingPage() {
       </section>
 
       {/* WHY COREWATCH SECTION */}
-      <section className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-zinc-900">
+      <section className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-brand-navy/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Why grid */}
@@ -1188,30 +1188,30 @@ export default function CoreWatchLandingPage() {
             
             {/* Left Col Info */}
             <div className="lg:col-span-5 space-y-6">
-              <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">Core Architecture</span>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+              <span className="text-xs font-black tracking-wider text-brand-gold uppercase">Core Architecture</span>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite">
                 Intelligence without compromise
               </h2>
-              <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed text-sm">
+              <p className="text-zinc-505 dark:text-zinc-400 leading-relaxed text-sm">
                 Most security cameras only record footage. The recordings sit on a hard drive, only accessed after something has already gone wrong. CoreWatch changes that — it layers local neural computing onto your infrastructure to interpret every feed live, raising alarms before risks escalate.
               </p>
               
               {/* Trust badges */}
               <div className="grid grid-cols-2 gap-6 pt-4">
                 <div className="space-y-1">
-                  <div className="text-2xl font-black text-zinc-900 dark:text-zinc-50">24/7</div>
+                  <div className="text-2xl font-black text-brand-navy dark:text-brand-offwhite">24/7</div>
                   <div className="text-[11px] font-black uppercase text-zinc-400 tracking-wider">Continuous checks</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-black text-zinc-900 dark:text-zinc-50">9+</div>
+                  <div className="text-2xl font-black text-brand-navy dark:text-brand-offwhite">9+</div>
                   <div className="text-[11px] font-black uppercase text-zinc-400 tracking-wider">Industries served</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-black text-zinc-900 dark:text-zinc-50">12+</div>
+                  <div className="text-2xl font-black text-brand-navy dark:text-brand-offwhite">12+</div>
                   <div className="text-[11px] font-black uppercase text-zinc-400 tracking-wider">Detections loaded</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-black text-zinc-900 dark:text-zinc-50">100%</div>
+                  <div className="text-2xl font-black text-brand-navy dark:text-brand-offwhite">100%</div>
                   <div className="text-[11px] font-black uppercase text-zinc-400 tracking-wider">On-premise option</div>
                 </div>
               </div>
@@ -1237,30 +1237,28 @@ export default function CoreWatchLandingPage() {
                   desc: "From initial validation to active alert clips in days. We manage setup, model optimization, and team onboarding complete."
                 }
               ].map((card, idx) => (
-                <div key={idx} className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+                <div key={idx} className="border border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                  <h3 className="text-base font-bold text-brand-navy dark:text-brand-offwhite mb-2">
                     {card.title}
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-505 dark:text-zinc-400 leading-relaxed">
                     {card.desc}
                   </p>
                 </div>
               ))}
             </div>
-
           </div>
-
         </div>
       </section>
 
       {/* DEPLOYMENT OPTIONS SECTION */}
-      <section id="deployment" className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-zinc-900 bg-zinc-100/40 dark:bg-zinc-950/20">
+      <section id="deployment" className="py-20 md:py-28 border-t border-brand-navy/10 dark:border-brand-navy/40 bg-brand-offwhite/50 dark:bg-brand-navy/15">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Section Headers */}
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">SURVEILLANCE HOOKS</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mt-2 mb-4">
+            <span className="text-xs font-black tracking-wider text-brand-gold uppercase">SURVEILLANCE HOOKS</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite mt-2 mb-4">
               Deploy on your terms
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400">
@@ -1272,15 +1270,15 @@ export default function CoreWatchLandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             
             {/* Hybrid Cloud */}
-            <div className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 rounded-2xl relative shadow-md">
+            <div className="border border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 p-8 rounded-2xl relative shadow-md">
               <div className="space-y-6">
                 <div>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">BEST FOR GENERAL COMMERCIAL</span>
-                  <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">Hybrid Cloud</h3>
+                  <h3 className="text-2xl font-bold text-brand-navy dark:text-brand-offwhite mt-2">Hybrid Cloud</h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">AI runs on-site, alert dashboards accessed from anywhere.</p>
                 </div>
                 
-                <ul className="space-y-3.5 border-t border-zinc-100 dark:border-zinc-800 pt-6">
+                <ul className="space-y-3.5 border-t border-zinc-100 dark:border-brand-navy/40 pt-6">
                   {[
                     "AI processing runs locally on-site for speed",
                     "Access dashboard from any mobile or desktop web browser",
@@ -1289,7 +1287,7 @@ export default function CoreWatchLandingPage() {
                     "We fully manage updates and cloud dashboard uptime"
                   ].map((li, idx) => (
                     <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
-                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4 text-brand-blue mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                       <span>{li}</span>
@@ -1300,20 +1298,20 @@ export default function CoreWatchLandingPage() {
             </div>
 
             {/* Full On-Premise */}
-            <div className="border border-emerald-500/40 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.04] p-8 rounded-2xl relative shadow-lg">
+            <div className="border border-brand-gold/40 bg-brand-gold/[0.02] dark:bg-brand-gold/[0.04] p-8 rounded-2xl relative shadow-lg">
               {/* Highlight badge */}
-              <div className="absolute top-4 right-4 bg-emerald-500 text-zinc-950 text-[9px] font-black px-2 py-0.5 rounded tracking-wide">
+              <div className="absolute top-4 right-4 bg-brand-gold text-brand-navy text-[9px] font-black px-2 py-0.5 rounded tracking-wide">
                 MAXIMUM PRIVACY
               </div>
 
               <div className="space-y-6">
                 <div>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">FOR GOVT, BANKS, MEDICAL</span>
-                  <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">Full On-Premise</h3>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded bg-brand-gold/20 text-brand-gold">FOR GOVT, BANKS, MEDICAL</span>
+                  <h3 className="text-2xl font-bold text-brand-navy dark:text-brand-offwhite mt-2">Full On-Premise</h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Everything runs strictly inside your local area network.</p>
                 </div>
                 
-                <ul className="space-y-3.5 border-t border-zinc-200/50 dark:border-zinc-800/80 pt-6">
+                <ul className="space-y-3.5 border-t border-zinc-200/50 dark:border-brand-navy/60 pt-6">
                   {[
                     "100% of video processing and analytics runs inside your LAN",
                     "Video feeds and user databases never leave your premises",
@@ -1322,7 +1320,7 @@ export default function CoreWatchLandingPage() {
                     "Structured as a one-time perpetual license with annual support"
                   ].map((li, idx) => (
                     <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
-                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4 text-brand-blue mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                       <span>{li}</span>
@@ -1338,15 +1336,15 @@ export default function CoreWatchLandingPage() {
       </section>
 
       {/* FAQ SECTION */}
-      <section id="faq" className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-zinc-900">
+      <section id="faq" className="py-20 md:py-28 border-t border-brand-navy/10 dark:border-brand-navy/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
             {/* FAQ Intro Left */}
             <div className="lg:col-span-5 space-y-6">
-              <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">Knowledge Base</span>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+              <span className="text-xs font-black tracking-wider text-brand-gold uppercase">Knowledge Base</span>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite">
                 Questions, answered.
               </h2>
               <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
@@ -1355,10 +1353,10 @@ export default function CoreWatchLandingPage() {
               <div className="pt-4 space-y-3">
                 <button 
                   onClick={() => scrollToSection('talk-to-us')} 
-                  className="px-6 py-3 rounded-xl text-sm font-semibold bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-3 rounded-xl text-sm font-semibold bg-brand-navy hover:bg-brand-dark-navy text-white dark:bg-brand-offwhite dark:text-brand-navy hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-brand-navy/10"
                 >
                   Book a free demo
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-brand-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -1372,19 +1370,19 @@ export default function CoreWatchLandingPage() {
                 return (
                   <div 
                     key={index}
-                    className="border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 rounded-xl overflow-hidden transition-colors"
+                    className="border border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 rounded-xl overflow-hidden transition-colors"
                   >
                     <button
                       onClick={() => setFaqOpen((prev) => ({ ...prev, [index]: !isOpen }))}
-                      className="w-full text-left px-6 py-4 flex justify-between items-center gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer"
+                      className="w-full text-left px-6 py-4 flex justify-between items-center gap-4 hover:bg-zinc-50 dark:hover:bg-brand-navy/40 transition-colors cursor-pointer"
                     >
-                      <span className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{faq.question}</span>
-                      <svg className={`w-5 h-5 text-zinc-400 transform transition-transform ${isOpen ? 'rotate-180 text-emerald-500' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <span className="text-sm font-bold text-brand-navy dark:text-brand-offwhite">{faq.question}</span>
+                      <svg className={`w-5 h-5 text-zinc-400 transform transition-transform ${isOpen ? 'rotate-180 text-brand-gold' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
                     {isOpen && (
-                      <div className="px-6 pb-5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed border-t border-zinc-100 dark:border-zinc-800/80 pt-4 bg-zinc-50/50 dark:bg-zinc-950/20 font-medium">
+                      <div className="px-6 pb-5 text-xs text-zinc-505 dark:text-zinc-450 leading-relaxed border-t border-zinc-150 dark:border-brand-navy/40 pt-4 bg-zinc-50/50 dark:bg-brand-navy/10 font-medium">
                         {faq.answer}
                       </div>
                     )}
@@ -1399,18 +1397,18 @@ export default function CoreWatchLandingPage() {
       </section>
 
       {/* DYNAMIC CONTACT FORM & TALK TO US */}
-      <section id="talk-to-us" className="py-20 md:py-28 border-t border-zinc-200/50 dark:border-zinc-900 bg-zinc-100/40 dark:bg-zinc-950/20">
+      <section id="talk-to-us" className="py-20 md:py-28 border-t border-brand-navy/10 dark:border-brand-navy/40 bg-brand-offwhite/50 dark:bg-brand-navy/15">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
             {/* Left Contact Info Column */}
             <div className="lg:col-span-5 space-y-6">
-              <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">Consulting desk</span>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+              <span className="text-xs font-black tracking-wider text-brand-gold uppercase">Consulting desk</span>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite">
                 Let's talk.
               </h2>
-              <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
+              <p className="text-zinc-505 dark:text-zinc-400 text-sm leading-relaxed">
                 Tell us about your space, operational risks, or compliance mandates. We will set up a customized proof-of-concept feed using your cameras to demonstrate exact detection outputs.
               </p>
 
@@ -1418,7 +1416,7 @@ export default function CoreWatchLandingPage() {
               <div className="space-y-4 pt-4">
                 
                 {/* WhatsApp */}
-                <a href="https://wa.me/919871329295" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-emerald-500/40 transition-all">
+                <a href="https://wa.me/919871329295" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 hover:border-brand-blue/40 transition-all">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.46h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -1431,8 +1429,8 @@ export default function CoreWatchLandingPage() {
                 </a>
 
                 {/* Email */}
-                <a href="mailto:info@corewatch.ai" className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-emerald-500/40 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50/10 text-blue-655 dark:text-blue-400 flex items-center justify-center">
+                <a href="mailto:info@corewatch.ai" className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 hover:border-brand-blue/40 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50/10 text-brand-blue dark:text-brand-light-blue flex items-center justify-center">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
@@ -1444,7 +1442,7 @@ export default function CoreWatchLandingPage() {
                 </a>
 
                 {/* Direct Line */}
-                <a href="tel:+919871329295" className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-emerald-500/40 transition-all">
+                <a href="tel:+919871329295" className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20 hover:border-brand-blue/40 transition-all">
                   <div className="w-10 h-10 rounded-xl bg-purple-50/10 text-purple-650 dark:text-purple-400 flex items-center justify-center">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -1460,7 +1458,7 @@ export default function CoreWatchLandingPage() {
             </div>
 
             {/* Right Booking Form Column */}
-            <div className="lg:col-span-7 bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/80 shadow-lg">
+            <div className="lg:col-span-7 bg-white dark:bg-brand-navy p-8 rounded-2xl border border-zinc-200/60 dark:border-brand-navy/60 shadow-lg">
               
               {!formSubmitted ? (
                 <form onSubmit={handleFormSubmit} className="space-y-5">
@@ -1474,7 +1472,7 @@ export default function CoreWatchLandingPage() {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="Your name"
-                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-brand-navy/60 bg-zinc-50 dark:bg-brand-dark-navy text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-brand-dark-navy focus:border-brand-blue dark:focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1486,7 +1484,7 @@ export default function CoreWatchLandingPage() {
                         value={formData.company}
                         onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                         placeholder="Company name"
-                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-brand-navy/60 bg-zinc-50 dark:bg-brand-dark-navy text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-brand-dark-navy focus:border-brand-blue dark:focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
                       />
                     </div>
                   </div>
@@ -1495,7 +1493,7 @@ export default function CoreWatchLandingPage() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400" htmlFor="form-phone">Phone / WhatsApp</label>
                       <div className="flex">
-                        <span className="inline-flex items-center px-3.5 rounded-l-xl border border-r-0 border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-sm font-bold">
+                        <span className="inline-flex items-center px-3.5 rounded-l-xl border border-r-0 border-zinc-200 dark:border-brand-navy/60 bg-zinc-100 dark:bg-brand-navy text-zinc-500 dark:text-zinc-400 text-sm font-bold">
                           +91
                         </span>
                         <input 
@@ -1505,7 +1503,7 @@ export default function CoreWatchLandingPage() {
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           placeholder="98765 43210"
-                          className="w-full px-4 py-3 rounded-r-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                          className="w-full px-4 py-3 rounded-r-xl border border-zinc-200 dark:border-brand-navy/60 bg-zinc-50 dark:bg-brand-dark-navy text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-brand-dark-navy focus:border-brand-blue dark:focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -1518,7 +1516,7 @@ export default function CoreWatchLandingPage() {
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="you@company.com"
-                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-brand-navy/60 bg-zinc-50 dark:bg-brand-dark-navy text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-brand-dark-navy focus:border-brand-blue dark:focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
                       />
                     </div>
                   </div>
@@ -1530,7 +1528,7 @@ export default function CoreWatchLandingPage() {
                         id="form-industry"
                         value={formData.industry}
                         onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-brand-navy/60 bg-zinc-50 dark:bg-brand-dark-navy text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:bg-white dark:focus:bg-brand-dark-navy focus:border-brand-blue dark:focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
                       >
                         <option>Manufacturing</option>
                         <option>Warehouse & Logistics</option>
@@ -1551,7 +1549,7 @@ export default function CoreWatchLandingPage() {
                         value={formData.cameras}
                         onChange={(e) => setFormData({ ...formData, cameras: e.target.value })}
                         placeholder="e.g. 12"
-                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-brand-navy/60 bg-zinc-50 dark:bg-brand-dark-navy text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-brand-dark-navy focus:border-brand-blue dark:focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
                       />
                     </div>
                   </div>
@@ -1564,14 +1562,14 @@ export default function CoreWatchLandingPage() {
                       value={formData.goals}
                       onChange={(e) => setFormData({ ...formData, goals: e.target.value })}
                       placeholder="Tell us about your space and goals..."
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-brand-navy/60 bg-zinc-50 dark:bg-brand-dark-navy text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:bg-white dark:focus:bg-brand-dark-navy focus:border-brand-blue dark:focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
                     ></textarea>
                   </div>
 
                   <button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="w-full px-6 py-4 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-550 text-white shadow-lg shadow-emerald-500/20 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-4 rounded-xl font-bold bg-gradient-to-r from-brand-gold to-brand-light-gold text-brand-navy hover:brightness-110 shadow-lg shadow-brand-gold/20 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -1594,7 +1592,7 @@ export default function CoreWatchLandingPage() {
                   <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto text-2xl animate-bounce font-black">
                     ✓
                   </div>
-                  <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Demo Request Submitted!</h3>
+                  <h3 className="text-xl font-bold text-brand-navy dark:text-brand-offwhite">Demo Request Submitted!</h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto font-medium">
                     Thanks for booking, <strong>{formData.name}</strong>. Our Delhi NCR engineering desk will contact you via WhatsApp (+91 {formData.phone}) or email ({formData.email}) within one business day to organize your proof-of-concept.
                   </p>
@@ -1611,7 +1609,7 @@ export default function CoreWatchLandingPage() {
                         goals: ''
                       });
                     }}
-                    className="mt-4 px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
+                    className="mt-4 px-4 py-2 border border-zinc-200 dark:border-brand-navy/60 rounded-lg text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-brand-navy/40 cursor-pointer"
                   >
                     Submit another request
                   </button>
@@ -1626,15 +1624,15 @@ export default function CoreWatchLandingPage() {
       </section>
 
       {/* REGIONAL COVERAGE SECTION */}
-      <section id="locations" className="py-20 border-t border-zinc-200/50 dark:border-zinc-900">
+      <section id="locations" className="py-20 border-t border-zinc-200/50 dark:border-brand-navy/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <span className="text-xs font-black tracking-wider text-emerald-500 dark:text-emerald-400 uppercase">On-Site Deployments</span>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mt-1">
+            <span className="text-xs font-black tracking-wider text-brand-gold uppercase">On-Site Deployments</span>
+            <h2 className="text-3xl font-bold tracking-tight text-brand-navy dark:text-brand-offwhite mt-1">
               Serving businesses across Delhi NCR
             </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+            <p className="text-zinc-505 dark:text-zinc-400 text-sm mt-2">
               A Gurgaon-based hardware and deployment team, providing on-premise installation and AI model calibration across the National Capital Region.
             </p>
           </div>
@@ -1651,11 +1649,11 @@ export default function CoreWatchLandingPage() {
                 key={idx} 
                 className={`p-6 rounded-2xl border text-center relative overflow-hidden transition-all ${
                   loc.highlight 
-                    ? 'border-emerald-500/40 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.04]' 
-                    : 'border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40'
+                    ? 'border-brand-blue bg-brand-blue/[0.02] dark:bg-brand-blue/[0.04]' 
+                    : 'border-zinc-200 dark:border-brand-navy/60 bg-white dark:bg-brand-navy/20'
                 }`}
               >
-                <h3 className={`text-base font-bold ${loc.highlight ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-950 dark:text-zinc-50'}`}>
+                <h3 className={`text-base font-bold ${loc.highlight ? 'text-brand-blue dark:text-brand-light-blue' : 'text-brand-navy dark:text-brand-offwhite'}`}>
                   {loc.city}
                 </h3>
                 <p className="text-[10px] text-zinc-400 mt-1 font-bold">
@@ -1669,23 +1667,22 @@ export default function CoreWatchLandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-zinc-950 text-zinc-400 border-t border-zinc-900 py-16">
+      <footer className="bg-brand-navy dark:bg-brand-dark-navy text-zinc-400 border-t border-brand-navy/40 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
           
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500 text-zinc-950 flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-500/10">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="CoreWatch Logo" 
+                className="h-12 w-auto object-contain"
+              />
               <span className="text-lg font-black text-white">CoreWatch</span>
             </div>
-            <p className="text-xs text-zinc-500 leading-relaxed">
+            <p className="text-xs text-zinc-400 leading-relaxed">
               CoreWatch turns your existing CCTV infrastructure into intelligent monitoring for safety, compliance, and asset protection.
             </p>
-            <span className="block text-[10px] text-zinc-600 font-mono">
+            <span className="block text-[10px] text-zinc-550 font-mono">
               © {new Date().getFullYear()} CoreWatch.ai. All rights reserved.
             </span>
           </div>
@@ -1693,26 +1690,26 @@ export default function CoreWatchLandingPage() {
           <div>
             <h4 className="text-xs font-black uppercase text-white tracking-widest mb-4">NAVIGATE</h4>
             <ul className="space-y-2 text-xs">
-              <li><button onClick={() => scrollToSection('how-it-works')} className="hover:text-emerald-450 transition-colors cursor-pointer">How it works</button></li>
-              <li><button onClick={() => scrollToSection('capabilities')} className="hover:text-emerald-450 transition-colors cursor-pointer">Solutions</button></li>
-              <li><button onClick={() => scrollToSection('industries')} className="hover:text-emerald-450 transition-colors cursor-pointer">Industries</button></li>
-              <li><button onClick={() => scrollToSection('deployment')} className="hover:text-emerald-450 transition-colors cursor-pointer">Deployment</button></li>
+              <li><button onClick={() => scrollToSection('how-it-works')} className="hover:text-brand-gold transition-colors cursor-pointer">How it works</button></li>
+              <li><button onClick={() => scrollToSection('capabilities')} className="hover:text-brand-gold transition-colors cursor-pointer">Solutions</button></li>
+              <li><button onClick={() => scrollToSection('industries')} className="hover:text-brand-gold transition-colors cursor-pointer">Industries</button></li>
+              <li><button onClick={() => scrollToSection('deployment')} className="hover:text-brand-gold transition-colors cursor-pointer">Deployment</button></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-xs font-black uppercase text-white tracking-widest mb-4">RESOURCES</h4>
             <ul className="space-y-2 text-xs">
-              <li><button onClick={() => scrollToSection('faq')} className="hover:text-emerald-455 transition-colors cursor-pointer">FAQ</button></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">About team</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Engineering blog</a></li>
-              <li><button onClick={() => scrollToSection('talk-to-us')} className="hover:text-emerald-455 transition-colors cursor-pointer">Talk to us</button></li>
+              <li><button onClick={() => scrollToSection('faq')} className="hover:text-brand-gold transition-colors cursor-pointer">FAQ</button></li>
+              <li><a href="#" className="hover:text-brand-gold transition-colors">About team</a></li>
+              <li><a href="#" className="hover:text-brand-gold transition-colors">Engineering blog</a></li>
+              <li><button onClick={() => scrollToSection('talk-to-us')} className="hover:text-brand-gold transition-colors cursor-pointer">Talk to us</button></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-xs font-black uppercase text-white tracking-widest mb-4">LOCATIONS NCR</h4>
-            <ul className="space-y-2 text-xs text-zinc-500">
+            <ul className="space-y-2 text-xs text-zinc-400">
               <li>Gurgaon corporate hub</li>
               <li>Manesar industrial area</li>
               <li>Noida tech parks</li>
