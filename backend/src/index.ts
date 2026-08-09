@@ -25,13 +25,14 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Import controllers
-import { registerUser, loginUser, getMe, updateUserRole } from "./controllers/authController";
+import { registerUser, loginUser, getMe, updateUserRole, verifyEmail } from "./controllers/authController";
 import { getUsers, createUser, deleteUser } from "./controllers/userController";
 import { getLeads, createLead, updateLead, deleteLead } from "./controllers/leadController";
 
 // Public Auth Routes
 app.post("/api/auth/register", registerUser);
 app.post("/api/auth/login", loginUser);
+app.post("/api/auth/verify-email", verifyEmail);
 app.get("/api/auth/me", protect, getMe);
 app.put("/api/auth/role", protect, updateUserRole);
 
@@ -45,6 +46,15 @@ app.get("/api/leads", protect, getLeads);
 app.post("/api/leads", protect, createLead);
 app.put("/api/leads/:id", protect, updateLead);
 app.delete("/api/leads/:id", protect, isAdmin, deleteLead);
+
+// Customer Routes
+import { createCustomer, getCustomers, setPassword, getCustomerMe, updateCustomerMe } from "./controllers/customerController";
+app.post("/api/customers", protect, isAdmin, createCustomer);
+app.get("/api/customers", protect, isAdmin, getCustomers);
+app.get("/api/customers/me", protect, getCustomerMe);
+app.put("/api/customers/me", protect, updateCustomerMe);
+app.post("/api/customers/set-password", setPassword);
+
 
 // Import event controllers
 import { createEvent, getEvents, markRead, markAllRead } from "./controllers/eventController";
@@ -87,6 +97,7 @@ app.post("/api/seed", async (req: Request, res: Response) => {
       email: adminEmail,
       password: adminPassword, // Will be hashed via pre-save hook
       role: "admin",
+      isVerified: true,
     });
 
     // Create User
@@ -95,6 +106,7 @@ app.post("/api/seed", async (req: Request, res: Response) => {
       email: "agent@corewatch.com",
       password: "password123", // Will be hashed via pre-save hook
       role: "user",
+      isVerified: true,
     });
 
     // Create Leads

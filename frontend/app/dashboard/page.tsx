@@ -43,22 +43,49 @@ export default function DashboardPage() {
   const [upgradeMsg, setUpgradeMsg] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Escape key press handler for mobile menu drawer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMobileOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Next.js MongoDB multi-tenant camera & alert state
   const [cameras, setCameras] = useState<any[]>([]);
   const [dbAlerts, setDbAlerts] = useState<any[]>([]);
   const [activeCameraKey, setActiveCameraKey] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
+    customers: true,
+  });
 
   // New Customer Form State (Admin)
   const [newCustomer, setNewCustomer] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
+    phone: '',
     company: '',
     cameras: 5,
     plan: 'Enterprise Pro',
+    addressLine1: '',
+    addressLine2: '',
+    country: '',
+    state: '',
+    city: '',
+    pincode: '',
   });
   const [customerSuccessMsg, setCustomerSuccessMsg] = useState<string | null>(null);
+  const [customerErrorMsg, setCustomerErrorMsg] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [selectedCountryCode, setSelectedCountryCode] = useState('+91');
+  const [isSubmittingCustomer, setIsSubmittingCustomer] = useState(false);
 
   // Initial Sample Data (Admin/Fallback)
   const [customers, setCustomers] = useState<Customer[]>([
@@ -67,6 +94,7 @@ export default function DashboardPage() {
     { id: 'CUST-103', name: 'Vikram Mehta', email: 'vikram@mehtatech.io', company: 'Mehta Precision Components', cameras: 24, plan: 'Enterprise Max', status: 'Active' },
     { id: 'CUST-104', name: 'Rohan Gupta', email: 'rohan@guptawarehouse.com', company: 'Gupta Warehousing NCR', cameras: 16, plan: 'Standard AI', status: 'Pending' },
   ]);
+
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -99,12 +127,42 @@ export default function DashboardPage() {
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.data) {
-            setUser({ ...data.data, token: storedToken });
-            localStorage.setItem('user', JSON.stringify({ ...data.data, token: storedToken }));
+            const freshUser = data.data;
+            setUser({ ...freshUser, token: storedToken });
+            localStorage.setItem('user', JSON.stringify({ ...freshUser, token: storedToken }));
+
+            if (freshUser.role !== 'admin') {
+              // Fetch customer profile to check if setup is complete
+              fetch(`${API_URL}/api/customers/me`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${storedToken}`,
+                },
+              })
+                .then((cRes) => cRes.json())
+                .then((cData) => {
+                  if (cData.success && cData.data && cData.data.status === 'Active') {
+                    // Allowed to enter dashboard
+                    setLoading(false);
+                  } else {
+                    // Pending status or no customer profile: redirect to wizard
+                    router.push('/signup-steps');
+                  }
+                })
+                .catch(() => {
+                  router.push('/signup-steps');
+                });
+            } else {
+              setLoading(false);
+            }
+          } else {
+            router.push('/login');
           }
         })
-        .catch((err) => console.log('Auth check note:', err))
-        .finally(() => setLoading(false));
+        .catch((err) => {
+          console.log('Auth check note:', err);
+          setLoading(false);
+        });
     } catch {
       router.push('/login');
     }
@@ -184,8 +242,24 @@ export default function DashboardPage() {
       }
     };
 
+    const loadCustomers = async () => {
+      if (user?.role !== 'admin') return;
+      try {
+        const res = await fetch(`${API_URL}/api/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setCustomers(data.data);
+        }
+      } catch (err) {
+        console.log("Failed to load customers list:", err);
+      }
+    };
+
     loadCameras();
     loadAlerts();
+    loadCustomers();
 
     // Poll Next.js Alerts API every 3 seconds
     const interval = setInterval(loadAlerts, 3000);
@@ -249,43 +323,164 @@ export default function DashboardPage() {
     }
   };
 
-  const handleAddCustomerSubmit = (e: React.FormEvent) => {
+  const handleAddCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCustomer.name || !newCustomer.email || !newCustomer.company) return;
+    
+    setCustomerSuccessMsg(null);
+    setCustomerErrorMsg(null);
+    const errors: Record<string, string> = {};
+    
+    if (!newCustomer.firstName.trim()) {
+      errors.firstName = 'First Name is required.';
+    }
+    if (!newCustomer.lastName.trim()) {
+      errors.lastName = 'Last Name is required.';
+    }
+    
+    if (!newCustomer.email.trim()) {
+      errors.email = 'Work Email Address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newCustomer.email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+    
+    const digitsOnly = newCustomer.phone.replace(/\D/g, '');
+    if (!newCustomer.phone.trim()) {
+      errors.phone = 'Phone Number is required.';
+    } else if (digitsOnly.length < 8 || digitsOnly.length > 15) {
+      errors.phone = 'Please enter a valid phone number (8 to 15 digits).';
+    }
+    
+    if (!newCustomer.company.trim()) {
+      errors.company = 'Company / Organization Name is required.';
+    }
+    
+    if (!newCustomer.addressLine1.trim()) {
+      errors.addressLine1 = 'Address Line 1 is required.';
+    }
+    
+    if (!newCustomer.country.trim()) {
+      errors.country = 'Country is required.';
+    }
+    
+    if (!newCustomer.state.trim()) {
+      errors.state = 'State / Region is required.';
+    }
+    
+    if (!newCustomer.city.trim()) {
+      errors.city = 'City is required.';
+    }
+    
+    const pinTrimmed = newCustomer.pincode.trim();
+    if (!pinTrimmed) {
+      errors.pincode = 'ZIP / Postal Code is required.';
+    } else if (!/^[A-Za-z0-9\s\-]{4,10}$/.test(pinTrimmed)) {
+      errors.pincode = 'Please enter a valid ZIP / Postal Code.';
+    }
 
-    const createdCust: Customer = {
-      id: `CUST-${Math.floor(100 + Math.random() * 900)}`,
-      name: newCustomer.name,
-      email: newCustomer.email,
-      company: newCustomer.company,
-      cameras: Number(newCustomer.cameras),
-      plan: newCustomer.plan,
-      status: 'Active',
-    };
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      
+      // Smooth scroll to the first error field
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.getElementById(`field-${firstErrorField}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Try focusing the inner input element
+        const inputEl = element.querySelector('input, select');
+        if (inputEl) {
+          setTimeout(() => {
+            (inputEl as HTMLElement).focus();
+          }, 300);
+        }
+      }
+      return;
+    }
 
-    setCustomers([createdCust, ...customers]);
-    setCustomerSuccessMsg(`Customer ${newCustomer.name} added successfully!`);
-    setNewCustomer({ name: '', email: '', company: '', cameras: 5, plan: 'Enterprise Pro' });
+    setFormErrors({});
+    setIsSubmittingCustomer(true);
 
-    setTimeout(() => setCustomerSuccessMsg(null), 4000);
+    try {
+      const customerToSubmit = {
+        ...newCustomer,
+        phone: `${selectedCountryCode} ${newCustomer.phone.trim()}`.trim(),
+      };
+
+      const res = await fetch(`${API_URL}/api/customers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify(customerToSubmit),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setCustomerSuccessMsg(`Customer ${newCustomer.firstName} ${newCustomer.lastName} added successfully! Setup email sent.`);
+        setNewCustomer({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          company: '',
+          cameras: 5,
+          plan: 'Enterprise Pro',
+          addressLine1: '',
+          addressLine2: '',
+          country: '',
+          state: '',
+          city: '',
+          pincode: '',
+        });
+        setSelectedCountryCode('+91');
+
+        // Reload customer directory
+        if (user?.token) {
+          const resList = await fetch(`${API_URL}/api/customers`, {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          const dataList = await resList.json();
+          if (dataList.success && dataList.data) {
+            setCustomers(dataList.data);
+          }
+        }
+      } else {
+        setCustomerErrorMsg(data.message || "Failed to create customer.");
+        document.getElementById('add-customer-header')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } catch (err) {
+      setCustomerErrorMsg("Network error: failed to submit customer information.");
+      document.getElementById('add-customer-header')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } finally {
+      setIsSubmittingCustomer(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 text-xs font-mono">Loading CoreWatch Workspace...</p>
+          <div className="w-10 h-10 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground text-xs font-mono">Loading CoreWatch Workspace...</p>
         </div>
       </div>
     );
   }
 
   // Define Navigation Menus for each Role
-  const roleMenus = {
+  const roleMenus: Record<string, any[]> = {
     admin: [
       { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-      { id: 'add_customer', label: 'Add Customer', icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' },
+      {
+        id: 'customers',
+        label: 'Customers',
+        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+        subItems: [
+          { id: 'all_customers', label: 'All Customers', icon: 'M4 6h16M4 12h16M4 18h16' },
+          { id: 'add_customer', label: 'Add Customer', icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' }
+        ]
+      },
       { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
       { id: 'subscription', label: 'Subscription', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
     ],
@@ -317,101 +512,194 @@ export default function DashboardPage() {
 
   const avatarInitials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CW';
 
-  return (
-    <div className={`min-h-screen flex font-sans bg-background text-foreground transition-colors duration-200 ${theme === 'dark' ? 'dark' : ''}`}>
-      
-      {/* ========================================================================= */}
-      {/* LEFT SIDEBAR (Deep Corporate Navy Slate) */}
-      {/* ========================================================================      {/* LEFT SIDEBAR (Deep Corporate Navy Slate) */}
-      {/* ========================================================================= */}
-      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-sidebar border-r border-sidebar-border/35 text-white flex flex-col justify-between transition-all duration-300 z-30 select-none shadow-2xl`}>
-        
+  const renderSidebar = (isMobile: boolean) => {
+    const collapsed = !isMobile && sidebarCollapsed;
+    const clickHandler = (tabId: string) => {
+      setActiveTab(tabId);
+      if (isMobile) {
+        setIsMobileOpen(false);
+      }
+    };
+
+    return (
+      <div className="h-full flex flex-col justify-between select-none">
         <div>
           {/* Top Brand & Logo */}
-          <div className={`h-16 ${sidebarCollapsed ? 'px-2' : 'px-3.5'} flex items-center justify-between border-b border-sidebar-border/30`}>
-            {!sidebarCollapsed ? (
+          <div className={`h-16 ${collapsed ? 'px-2' : 'px-4'} flex items-center justify-between border-b border-sidebar-border bg-black/5 dark:bg-black/25`}>
+            {!collapsed ? (
               <div className="flex items-center gap-2 h-full">
                 <img 
                   src="/logo.png" 
                   alt="CoreWatch Logo" 
-                  className="h-[56px] w-[56px] object-cover object-left shrink-0 -ml-3"
+                  className="h-8 w-8 object-contain shrink-0"
                 />
-                <span className="font-extrabold text-[13px] text-white tracking-wider uppercase leading-tight">
-                  {currentRole === 'admin' ? 'CoreWatch Admin' : currentRole === 'demo' ? 'CoreWatch Demo' : 'CoreWatch User'}
+                <span className="font-extrabold text-xs tracking-wider uppercase bg-gradient-to-r from-sidebar-foreground to-[#785D32] dark:from-[#FAF6EE] dark:to-[#C0A06E] bg-clip-text text-transparent">
+                  {currentRole === 'admin' ? 'CoreWatch Admin' : currentRole === 'demo' ? 'CoreWatch Demo' : 'CoreWatch AI'}
                 </span>
               </div>
             ) : (
-              <img 
-                src="/logo.png" 
-                alt="CoreWatch Logo" 
-                className="h-[50px] w-[50px] object-cover object-left shrink-0 animate-pulse -ml-2"
-              />
+              <div className="w-full flex justify-center">
+                <img 
+                  src="/logo.png" 
+                  alt="CoreWatch Logo" 
+                  className="h-8 w-8 object-contain shrink-0"
+                />
+              </div>
             )}
 
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-white/60 hover:text-white hover:bg-white/10 p-1 rounded-md transition-all cursor-pointer"
-              title="Toggle Sidebar"
-            >
-              <svg className="w-3.5 h-3.5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
-              </svg>
-            </button>
+            {!collapsed && !isMobile && (
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="text-[#785D32] dark:text-[#C0A06E] hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 p-1.5 rounded transition-all cursor-pointer"
+                title="Collapse Sidebar"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {isMobile && (
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="text-[#785D32] dark:text-[#C0A06E] hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 p-1.5 rounded transition-all cursor-pointer"
+                title="Close Menu"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
 
-          {/* User Profile Card inside Sidebar Header */}
-          {!sidebarCollapsed ? (
-            <div className="px-4 py-3 flex items-center gap-3 border-b border-sidebar-border/30 bg-black/10">
-              <div className="w-9 h-9 rounded-full bg-brand-blue text-white font-black text-xs flex items-center justify-center relative shrink-0 shadow-md border border-white/10">
+          {collapsed && (
+            <div className="h-16 flex items-center justify-center border-b border-sidebar-border bg-black/5 dark:bg-black/25">
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="text-[#785D32] dark:text-[#C0A06E] hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 p-1.5 rounded transition-all cursor-pointer"
+                title="Expand Sidebar"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* User Profile Card inside Sidebar */}
+          {!collapsed ? (
+            <div className="mx-3 my-3 p-3 rounded-lg border border-sidebar-border bg-black/[0.02] dark:bg-white/[0.02] flex items-center gap-3 shadow-inner">
+              <div className="w-8 h-8 rounded-full bg-[#785D32] text-[#FAF6EE] font-black text-xs flex items-center justify-center relative shrink-0 ring-1 ring-[#FAF6EE]/20 shadow-md">
                 {avatarInitials}
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-brand-navy animate-ping"></span>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-brand-navy"></span>
+                <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-[#0A0B0E]"></span>
               </div>
               <div className="truncate min-w-0 flex-1">
-                <div className="text-sm font-bold text-white truncate leading-tight">{user?.name}</div>
-                <div className="text-[10px] font-bold text-brand-gold uppercase tracking-wider mt-0.5 leading-none">{user?.role}</div>
+                <div className="text-[13.5px] font-bold text-sidebar-foreground truncate leading-tight">{user?.name}</div>
+                <div className="text-[10px] font-black text-[#785D32] dark:text-[#C0A06E] uppercase tracking-wider mt-0.5 leading-none">{user?.role}</div>
               </div>
             </div>
           ) : (
-            <div className="py-3 border-b border-sidebar-border/30 bg-black/10 flex justify-center">
-              <div className="w-9 h-9 rounded-full bg-brand-blue text-white font-black text-xs flex items-center justify-center relative shrink-0 border border-white/10">
+            <div className="my-3 flex justify-center">
+              <div className="w-8 h-8 rounded-full bg-[#785D32] text-[#FAF6EE] font-black text-xs flex items-center justify-center relative shrink-0 ring-1 ring-[#FAF6EE]/20 shadow-md" title={`${user?.name} (${user?.role})`}>
                 {avatarInitials}
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-brand-navy"></span>
+                <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-[#0A0B0E]"></span>
               </div>
             </div>
           )}
 
           {/* Navigation Links Menu */}
-          <nav className="px-3 py-4 space-y-1.5">
+          <nav className="px-2 py-4 space-y-1.5">
             {menuItems.map((item) => {
-              const isActive = activeTab === item.id;
+              const hasSubItems = !!item.subItems;
+              const isSubmenuOpen = !!openSubmenus[item.id];
+              const isParentActive = hasSubItems && item.subItems.some((sub: any) => sub.id === activeTab);
+              const isActive = activeTab === item.id || isParentActive;
+
+              if (hasSubItems) {
+                return (
+                  <div key={item.id} className="space-y-1">
+                    <button
+                      onClick={() => {
+                        if (collapsed) {
+                          setSidebarCollapsed(false);
+                          setOpenSubmenus((prev) => ({ ...prev, [item.id]: true }));
+                        } else {
+                          setOpenSubmenus((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+                        }
+                      }}
+                      className={`w-full relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-gradient-to-r from-[#785D32]/15 to-transparent text-sidebar-foreground border-l-2 border-[#785D32] shadow-[0_4px_12px_rgba(120,93,50,0.08)]'
+                          : 'text-sidebar-foreground/75 hover:translate-x-[3.5px] hover:text-sidebar-foreground hover:bg-black/[0.03] dark:hover:bg-white/[0.03]'
+                      }`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <svg className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-[#C0A06E]' : 'text-sidebar-foreground/45'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                      </svg>
+                      
+                      {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                      
+                      {!collapsed && (
+                        <svg className={`w-3 h-3 transition-transform duration-200 text-sidebar-foreground/35 ${isSubmenuOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      )}
+                    </button>
+
+                    {/* Submenu Items */}
+                    <div 
+                      className="grid transition-all duration-300 ease-in-out overflow-hidden"
+                      style={{ 
+                        gridTemplateRows: (isSubmenuOpen && !collapsed) ? '1fr' : '0fr',
+                        opacity: (isSubmenuOpen && !collapsed) ? 1 : 0
+                      }}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="pl-5 ml-4 border-l border-sidebar-border space-y-1 py-1">
+                          {item.subItems.map((sub: any) => {
+                            const isSubActive = activeTab === sub.id;
+                            return (
+                              <button
+                                key={sub.id}
+                                onClick={() => clickHandler(sub.id)}
+                                className={`w-full relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all duration-150 cursor-pointer ${
+                                  isSubActive
+                                    ? 'text-sidebar-foreground font-bold bg-[#785D32]/15'
+                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:translate-x-[2px]'
+                                }`}
+                                title={sub.label}
+                              >
+                                {isSubActive && (
+                                  <span className="absolute left-[-21px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#785D32]"></span>
+                                )}
+                                <span className="truncate text-left">{sub.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                  onClick={() => clickHandler(item.id)}
+                  className={`w-full relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? 'bg-white/10 text-white font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                      ? 'bg-gradient-to-r from-[#785D32]/15 to-transparent text-sidebar-foreground border-l-2 border-[#785D32] shadow-[0_4px_12px_rgba(120,93,50,0.08)]'
+                      : 'text-sidebar-foreground/75 hover:translate-x-[3.5px] hover:text-sidebar-foreground hover:bg-black/[0.03] dark:hover:bg-white/[0.03]'
                   }`}
-                  title={item.label}
+                  title={collapsed ? item.label : undefined}
                 >
-                  {/* Left Accent indicator line on Active */}
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-gold" />
-                  )}
-                  
-                  <svg className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-brand-gold' : 'text-white/60'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-[#C0A06E]' : 'text-sidebar-foreground/45'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                   </svg>
                   
-                  {!sidebarCollapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                  
-                  {!sidebarCollapsed && (item.id === 'settings' || item.id === 'add_customer') && (
-                    <svg className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-brand-gold' : 'text-white/40'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
+                  {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
                 </button>
               );
             })}
@@ -419,56 +707,64 @@ export default function DashboardPage() {
         </div>
 
         {/* Sidebar Bottom Controls */}
-        <div className="p-3 border-t border-sidebar-border/30 space-y-1.5 bg-black/10">
-          {!sidebarCollapsed ? (
-            <div className="grid grid-cols-2 gap-1.5 mb-1">
+        <div className="p-3 border-t border-sidebar-border space-y-1.5 bg-black/5 dark:bg-black/25">
+          {!collapsed ? (
+            <div className="grid grid-cols-2 gap-1 mb-1 p-1 rounded-lg border border-sidebar-border bg-black/[0.02] dark:bg-white/[0.01]">
               <button
-                onClick={() => setActiveTab('profile')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
-                  activeTab === 'profile'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                onClick={() => clickHandler('settings')}
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded text-[12.5px] font-semibold transition-all cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
+                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
               >
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                </svg>
+                <span>Settings</span>
+              </button>
+
+              <button
+                onClick={() => clickHandler('profile')}
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded text-[12.5px] font-semibold transition-all cursor-pointer ${
+                  activeTab === 'profile'
+                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
+                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <span>Profile</span>
               </button>
-
-              <button
-                onClick={() => alert("Password management panel opened.")}
-                className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-[11px] font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-              >
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                </svg>
-                <span>Password</span>
-              </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1 p-1 rounded-lg border border-sidebar-border bg-black/[0.02] dark:bg-white/[0.01]">
               <button
-                onClick={() => setActiveTab('profile')}
-                className={`flex items-center justify-center p-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                onClick={() => clickHandler('settings')}
+                className={`flex items-center justify-center p-1.5 rounded transition-all cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
+                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
+                }`}
+                title="Settings"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => clickHandler('profile')}
+                className={`flex items-center justify-center p-1.5 rounded transition-all cursor-pointer ${
                   activeTab === 'profile'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
+                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
                 title="Profile"
               >
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => alert("Password management panel opened.")}
-                className="flex items-center justify-center p-2 rounded-lg text-xs font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                title="Password"
-              >
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                 </svg>
               </button>
             </div>
@@ -476,18 +772,47 @@ export default function DashboardPage() {
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-bold border border-red-500/20 dark:border-red-500/15 bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
             title="Logout"
           >
             <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            {!sidebarCollapsed && <span className="text-left font-bold">Logout</span>}
+            {!collapsed && <span>Logout</span>}
           </button>
         </div>
+      </div>
+    );
+  };
 
+  return (
+    <div className={`h-screen overflow-hidden flex font-sans bg-background text-foreground transition-colors duration-200 ${theme === 'dark' ? 'dark' : ''}`}>
+      
+      {/* Mobile Drawer Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        ></div>
+      )}
+
+      {/* Mobile Drawer Aside */}
+      <aside className={`fixed top-0 bottom-0 left-0 w-64 border-r border-sidebar-border text-sidebar-foreground flex flex-col justify-between transition-transform duration-300 z-50 select-none shadow-2xl lg:hidden ${
+        theme === 'dark' ? 'bg-gradient-to-b from-[#0A0B0E] via-[#050608] to-black' : 'bg-sidebar'
+      } ${
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        {renderSidebar(true)}
       </aside>
 
+      {/* Desktop Sidebar */}
+      <aside className={`hidden lg:flex flex-col justify-between shrink-0 transition-all duration-300 z-30 select-none border-r border-sidebar-border shadow-[4px_0_24px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.8)] text-sidebar-foreground ${
+        theme === 'dark' ? 'bg-gradient-to-b from-[#0A0B0E] via-[#050608] to-black' : 'bg-sidebar'
+      } ${
+        sidebarCollapsed ? 'w-20' : 'w-64'
+      }`}>
+        {renderSidebar(false)}
+      </aside>
       {/* ========================================================================= */}
       {/* RIGHT MAIN WORKSPACE AREA */}
       {/* ========================================================================= */}
@@ -495,23 +820,44 @@ export default function DashboardPage() {
            {/* TOP HEADER BAR */}
         <header className="h-16 border-b border-border bg-card/85 backdrop-blur-md px-6 flex items-center justify-between z-20 shrink-0 shadow-sm">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-foreground capitalize">
+            <button
+              onClick={() => setIsMobileOpen(true)}
+              className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+              title="Open Menu"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+<h1 className="text-lg font-bold text-foreground capitalize">
               {activeTab.replace('_', ' ')}
             </h1>
           </div>
 
           <div className="flex items-center gap-4 relative">
-                   {/* Theme Toggle (Light / Dark Switch) */}
-            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <span>Light</span>
+            {/* Theme Toggle (Light / Dark Switch) */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={toggleTheme}
-                className={`w-11 h-6 rounded-full p-1 transition-colors duration-200 cursor-pointer flex items-center ${
-                  theme === 'dark' ? 'bg-brand-blue justify-end' : 'bg-slate-300 justify-start'
+                aria-label="Toggle Theme"
+                className={`relative w-12 h-6.5 rounded-full p-1 transition-all duration-300 ease-in-out cursor-pointer flex items-center border border-border shadow-inner ${
+                  theme === 'dark' ? 'bg-[#0E0F12]' : 'bg-muted'
                 }`}
               >
-                <div className="w-4 h-4 rounded-full bg-white shadow-md flex items-center justify-center text-[10px]">
-                  {theme === 'dark' ? '🌙' : '☀️'}
+                <div 
+                  className={`w-4.5 h-4.5 rounded-full bg-[#3E160C] dark:bg-brand-gold shadow-md flex items-center justify-center transition-all duration-300 ease-in-out ${
+                    theme === 'dark' ? 'translate-x-5 rotate-[360deg]' : 'translate-x-0 rotate-0'
+                  }`}
+                >
+                  {theme === 'dark' ? (
+                    <svg className="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.3 22h-.1c-5.5 0-10-4.5-10-10C2.2 6.8 6.5 2.5 12 2.2c.4 0 .7.2.9.5.2.3.2.7 0 1-.8 1.4-1.2 3.1-1.2 4.8 0 4.7 3.8 8.5 8.5 8.5 1.7 0 3.4-.4 4.8-1.2.3-.2.7-.2 1 0 .3.2.5.5.5.9-.3 5.5-4.6 9.8-10.2 9.8zm.9-17.6c-4.2.4-7.5 3.8-7.5 8.1 0 4.4 3.6 8 8 8 4.3 0 7.7-3.3 8.1-7.5-1.1.6-2.4.9-3.8.9-5.8 0-10.5-4.7-10.5-10.5 0-1.4.3-2.7.9-3.8z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5 text-[#FAF6EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.243 17.657l.707-.707M6.343 4.343l.707.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+                    </svg>
+                  )}
                 </div>
               </button>
             </div>
@@ -533,7 +879,7 @@ export default function DashboardPage() {
                 <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border bg-card p-4 shadow-2xl z-50">
                   <div className="flex justify-between items-center pb-2 border-b border-border">
                     <span className="text-xs font-bold text-foreground">Live Notifications</span>
-                    <span className="text-[10px] text-brand-blue dark:text-brand-light-blue font-bold">2 Unread</span>
+                    <span className="text-[10px] text-brand-gold-light dark:text-[#C0A06E] font-bold">2 Unread</span>
                   </div>
                   <div className="space-y-3 pt-3">
                     <div className="text-xs p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
@@ -553,7 +899,7 @@ export default function DashboardPage() {
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors cursor-pointer"
               >
-                <div className="w-6 h-6 rounded-full bg-brand-blue text-white font-black text-[10px] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-[#785D32] text-white font-black text-[10px] flex items-center justify-center">
                   {avatarInitials}
                 </div>
                 <span className="text-xs font-bold text-foreground uppercase">{user?.role}</span>
@@ -580,10 +926,6 @@ export default function DashboardPage() {
 
         {/* WORKSPACE CONTENT BODY */}
         <main className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
-          <div className="min-h-[400px]"></div>
-          {/* Disable all page contents as requested, keeping the page structure intact */}
-          {false && (
-            <>
 
           {/* =================================================================== */}
           {/* 1. ADMIN ROLE TAB VIEWS */}
@@ -615,7 +957,11 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-muted-foreground">Full system access privileges</div>
                     </div>
                   </div>
+                </div>
+              )}
 
+              {activeTab === 'all_customers' && (
+                <div className="space-y-6">
                   {/* Customer Directory Table */}
                   <div className="border border-border bg-card rounded-2xl p-6 shadow-sm space-y-4">
                     <div className="flex justify-between items-center">
@@ -671,87 +1017,280 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'add_customer' && (
-                <div className="max-w-2xl mx-auto border border-border bg-card rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
-                  <div>
-                    <h2 className="text-xl font-black text-foreground">Add Enterprise Customer</h2>
-                    <p className="text-xs text-muted-foreground">Register a new client organization for CCTV AI inspection.</p>
+                <div className="w-full space-y-6">
+                  {/* Page Header */}
+                  <div id="add-customer-header" className="flex justify-between items-center pb-4 border-b border-border">
+                    <div>
+                      <h2 className="text-xl font-extrabold text-foreground">Add New Enterprise Customer</h2>
+                      <p className="text-xs text-muted-foreground">Register a new client organization and provision CCTV AI inspection licenses.</p>
+                    </div>
                   </div>
 
                   {customerSuccessMsg && (
-                    <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
-                      ✅ {customerSuccessMsg}
+                    <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2.5 animate-fadeIn">
+                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{customerSuccessMsg}</span>
                     </div>
                   )}
 
-                  <form onSubmit={handleAddCustomerSubmit} className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-muted-foreground">Customer Full Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={newCustomer.name}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                        placeholder="e.g. Pratham User"
-                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
-                      />
+                  {customerErrorMsg && (
+                    <div className="p-4 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold flex items-center gap-2.5 animate-fadeIn">
+                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span>{customerErrorMsg}</span>
                     </div>
+                  )}
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-muted-foreground">Work Email Address</label>
-                      <input
-                        type="email"
-                        required
-                        value={newCustomer.email}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                        placeholder="pratham@company.com"
-                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-muted-foreground">Company / Organization Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={newCustomer.company}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, company: e.target.value })}
-                        placeholder="e.g. Tiera India Ltd"
-                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-muted-foreground">Camera Licenses</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={100}
-                          value={newCustomer.cameras}
-                          onChange={(e) => setNewCustomer({ ...newCustomer, cameras: Number(e.target.value) })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
-                        />
+                  <form onSubmit={handleAddCustomerSubmit} noValidate className="space-y-6">
+                     {/* Panel 1: Account Information */}
+                    <div className="border border-border bg-card rounded-2xl p-6 shadow-sm space-y-6">
+                      <div className="flex items-center gap-3 pb-3 border-b border-border/40">
+                        <div className="w-6 h-6 rounded-full bg-brand-gold text-[#FAF6EE] text-xs font-bold flex items-center justify-center shrink-0">
+                          1
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground">Account Information</h3>
+                          <p className="text-[10px] text-muted-foreground">Primary administrative contact details for the customer account.</p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-muted-foreground">Subscription Tier</label>
-                        <select
-                          value={newCustomer.plan}
-                          onChange={(e) => setNewCustomer({ ...newCustomer, plan: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:bg-background focus:border-brand-blue"
-                        >
-                          <option value="Standard AI">Standard AI</option>
-                          <option value="Enterprise Pro">Enterprise Pro</option>
-                          <option value="Enterprise Max">Enterprise Max</option>
-                        </select>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                        <div id="field-firstName" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">First Name <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.firstName}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, firstName: e.target.value })}
+                            placeholder="John"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.firstName && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.firstName}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-lastName" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Last Name <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.lastName}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, lastName: e.target.value })}
+                            placeholder="Doe"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.lastName && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.lastName}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-email" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Work Email Address <span className="text-red-500">*</span></label>
+                          <input
+                            type="email"
+                            value={newCustomer.email}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                            placeholder="john.doe@company.com"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.email && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.email}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-phone" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Phone Number <span className="text-red-500">*</span></label>
+                          <div className="flex items-center border border-border rounded-lg bg-background overflow-hidden focus-within:ring-2 focus-within:ring-brand-gold/20 focus-within:border-brand-gold transition-all duration-200">
+                            <div className="relative flex items-center bg-card/50 border-r border-border shrink-0">
+                              <select
+                                value={selectedCountryCode}
+                                onChange={(e) => setSelectedCountryCode(e.target.value)}
+                                className="pl-3 pr-7 py-2.5 bg-transparent text-xs font-bold text-muted-foreground focus:outline-none appearance-none cursor-pointer"
+                              >
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+971">🇦🇪 +971</option>
+                                <option value="+65">🇸🇬 +65</option>
+                                <option value="+61">🇦🇺 +61</option>
+                                <option value="+49">🇩🇪 +49</option>
+                              </select>
+                              <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none text-muted-foreground">
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            </div>
+                            <input
+                              type="tel"
+                              value={newCustomer.phone}
+                              onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                              placeholder="99999 99999"
+                              className="w-full px-3 py-2.5 bg-transparent text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none border-none outline-none"
+                            />
+                          </div>
+                          {formErrors.phone && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.phone}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-company" className="space-y-1.5 md:col-span-2">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Company / Organization Name <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.company}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, company: e.target.value })}
+                            placeholder="Tiera India Logistics"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.company && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.company}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-sky-600/20"
-                    >
-                      Save & Provision Customer Account
-                    </button>
+                    {/* Panel 2: Address Information */}
+                    <div className="border border-border bg-card rounded-2xl p-6 shadow-sm space-y-6">
+                      <div className="flex items-center gap-3 pb-3 border-b border-border/40">
+                        <div className="w-6 h-6 rounded-full bg-brand-gold text-[#FAF6EE] text-xs font-bold flex items-center justify-center shrink-0">
+                          2
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground">Address Details</h3>
+                          <p className="text-[10px] text-muted-foreground">Physical location details for safety inspection deployments.</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                        <div id="field-addressLine1" className="space-y-1.5 md:col-span-2">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Address Line 1 <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.addressLine1}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, addressLine1: e.target.value })}
+                            placeholder="Plot No, Street Name, Industry Area"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.addressLine1 && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.addressLine1}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-addressLine2" className="space-y-1.5 md:col-span-2">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Address Line 2</label>
+                          <input
+                            type="text"
+                            value={newCustomer.addressLine2}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, addressLine2: e.target.value })}
+                            placeholder="Suite, Block, Landmark, etc."
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                        </div>
+
+                        <div id="field-country" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Country <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.country}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, country: e.target.value })}
+                            placeholder="India"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.country && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.country}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-state" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">State / Region <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.state}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, state: e.target.value })}
+                            placeholder="Delhi"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.state && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.state}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-city" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">City <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.city}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, city: e.target.value })}
+                            placeholder="New Delhi"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.city && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.city}
+                            </p>
+                          )}
+                        </div>
+
+                        <div id="field-pincode" className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">ZIP / Postal Code <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={newCustomer.pincode}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, pincode: e.target.value })}
+                            placeholder="110001"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 transition-all duration-200"
+                          />
+                          {formErrors.pincode && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 animate-fadeIn">
+                              ⚠️ {formErrors.pincode}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="flex justify-end pt-4">
+                      <button
+                        type="submit"
+                        disabled={isSubmittingCustomer}
+                        className="px-6 py-2.5 rounded-lg bg-brand-gold hover:bg-brand-gold-light disabled:bg-brand-gold/50 text-[#FAF6EE] font-semibold text-xs tracking-wider transition-all duration-200 cursor-pointer shadow-sm transform active:scale-[0.98] flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+                      >
+                        {isSubmittingCustomer ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Submitting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 text-[#FAF6EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                            <span>Add Customer</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
                   </form>
                 </div>
               )}
@@ -894,8 +1433,8 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Live CCTV Inspection Feeds</h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Real-time video analytics with automated bounding boxes.</p>
+                      <h2 className="text-lg font-bold text-foreground">Live CCTV Inspection Feeds</h2>
+                      <p className="text-xs text-muted-foreground">Real-time video analytics with automated bounding boxes.</p>
                     </div>
                     <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 font-mono text-xs font-bold flex items-center gap-1.5 animate-pulse">
                       <span className="w-2 h-2 rounded-full bg-red-500"></span>
@@ -903,13 +1442,13 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className="aspect-video w-full max-w-4xl mx-auto bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden relative flex items-center justify-around p-8 shadow-2xl">
-                    <div className="absolute top-4 left-4 font-mono text-xs text-slate-400 bg-slate-900/80 px-3 py-1 rounded border border-slate-800">
+                  <div className="aspect-video w-full max-w-4xl mx-auto bg-background rounded-lg border border-border overflow-hidden relative flex items-center justify-around p-8 shadow-2xl">
+                    <div className="absolute top-4 left-4 font-mono text-xs text-[#FAF6EE]/80 bg-black/40 px-3 py-1 rounded border border-border">
                       CAM-03 LOGISTICS DOCK · 1080P @ 30FPS
                     </div>
 
                     <div className="border-2 border-cyan-400 bg-cyan-500/10 p-4 rounded-xl text-center text-xs font-mono">
-                      <div className="bg-cyan-400 text-slate-950 text-[10px] px-2 py-0.5 font-bold rounded mb-2">
+                      <div className="bg-cyan-400 text-black text-[10px] px-2 py-0.5 font-bold rounded mb-2">
                         HELMET: OK (98%)
                       </div>
                       <svg className="w-16 h-16 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -932,59 +1471,59 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'subscription_detail' && (
-                <div className="max-w-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-6 shadow-sm">
+                <div className="max-w-2xl border border-border bg-card rounded-lg p-6 space-y-6 shadow-sm">
                   <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Subscription Details</h2>
-                    <span className="px-3 py-1 rounded bg-brand-gold/20 text-brand-gold font-bold text-xs">Active Plan</span>
+                    <h2 className="text-lg font-bold text-foreground">Subscription Details</h2>
+                    <span className="px-3 py-1 rounded bg-brand-gold/20 text-[#C0A06E] font-bold text-xs">Active Plan</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-                    <div>
-                      <span className="text-slate-500 dark:text-slate-400 block mb-1">PLAN NAME</span>
-                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Enterprise Pro</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 dark:text-slate-400 block mb-1">CAMERA LICENSES</span>
-                      <span className="font-bold text-sm text-brand-blue dark:text-brand-light-blue">12 / 20 Allocated</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 dark:text-slate-400 block mb-1">BILLING CYCLE</span>
-                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Monthly ($1,299)</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 dark:text-slate-400 block mb-1">RENEWAL DATE</span>
-                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Sept 01, 2026</span>
-                    </div>
+                     <div>
+                       <span className="text-muted-foreground block mb-1">PLAN NAME</span>
+                       <span className="font-bold text-sm text-foreground">Enterprise Pro</span>
+                     </div>
+                     <div>
+                       <span className="text-muted-foreground block mb-1">CAMERA LICENSES</span>
+                       <span className="font-bold text-sm text-brand-gold-light">12 / 20 Allocated</span>
+                     </div>
+                     <div>
+                       <span className="text-muted-foreground block mb-1">BILLING CYCLE</span>
+                       <span className="font-bold text-sm text-foreground">Monthly ($1,299)</span>
+                     </div>
+                     <div>
+                       <span className="text-muted-foreground block mb-1">RENEWAL DATE</span>
+                       <span className="font-bold text-sm text-foreground">Sept 01, 2026</span>
+                     </div>
                   </div>
                 </div>
               )}
 
               {activeTab === 'event_history' && (
-                <div className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Security Event History Log</h2>
+                <div className="border border-border bg-card rounded-lg p-6 space-y-4 shadow-sm">
+                  <h2 className="text-lg font-bold text-foreground">Security Event History Log</h2>
                   <div className="space-y-3">
                     {dbAlerts.length > 0 ? (
                       dbAlerts.map((alert) => (
-                        <div key={alert._id} className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 flex gap-4 items-center text-xs">
+                        <div key={alert._id} className="p-4 rounded-lg border border-border bg-background/60 flex gap-4 items-center text-xs">
                           {alert.imageUrl && (
                             <img 
                               src={alert.imageUrl} 
                               alt="Alert Snapshot" 
-                              className="w-16 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0" 
+                              className="w-16 h-12 object-cover rounded-lg border border-border shrink-0" 
                             />
                           )}
                           <div className="space-y-1 flex-1 min-w-0">
-                            <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{alert.message}</div>
-                            <div className="text-slate-500 dark:text-slate-400 font-mono truncate">
+                            <div className="font-bold text-foreground truncate">{alert.message}</div>
+                            <div className="text-muted-foreground font-mono truncate">
                               Camera: {alert.cameraKey} · {new Date(alert.timestamp).toLocaleTimeString()} ({new Date(alert.timestamp).toLocaleDateString()})
                             </div>
                           </div>
-                          <span className="px-3 py-1 rounded bg-slate-200 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                          <span className="px-3 py-1 rounded bg-brand-navy border border-border font-bold text-muted-foreground shrink-0">
                             RECEIVED
                           </span>
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-6 text-xs text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
+                      <div className="text-center py-6 text-xs text-muted-foreground border border-dashed border-border rounded-lg">
                         No historical events found.
                       </div>
                     )}
@@ -993,19 +1532,19 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'profile' && (
-                <div className="max-w-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">User Account Profile</h2>
+                <div className="max-w-lg border border-border bg-card rounded-lg p-6 space-y-4 shadow-sm">
+                  <h2 className="text-lg font-bold text-foreground">User Account Profile</h2>
                   <div className="space-y-3 text-xs">
                     <div>
-                      <span className="text-slate-500 dark:text-slate-400 block">Full Name</span>
-                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{user?.name}</span>
+                      <span className="text-muted-foreground block">Full Name</span>
+                      <span className="font-bold text-sm text-foreground">{user?.name}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 dark:text-slate-400 block">Email</span>
-                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{user?.email}</span>
+                      <span className="text-muted-foreground block">Email</span>
+                      <span className="font-bold text-sm text-foreground">{user?.email}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 dark:text-slate-400 block">Account Role</span>
+                      <span className="text-muted-foreground block">Account Role</span>
                       <span className="font-bold text-sm text-brand-gold uppercase">{user?.role}</span>
                     </div>
                   </div>
@@ -1013,15 +1552,15 @@ export default function DashboardPage() {
               )}
 
               {activeTab === 'notification' && (
-                <div className="max-w-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Notification Preferences</h2>
-                  <div className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
+                <div className="max-w-lg border border-border bg-card rounded-lg p-6 space-y-4 shadow-sm">
+                  <h2 className="text-lg font-bold text-foreground">Notification Preferences</h2>
+                  <div className="space-y-3 text-xs text-foreground/80">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-brand-blue" />
+                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-brand-gold bg-background border-border text-brand-gold" />
                       <span>Email Alerts for High Severity Violations</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-brand-blue" />
+                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-brand-gold bg-background border-border text-brand-gold" />
                       <span>WhatsApp Supervisor Dispatches</span>
                     </label>
                   </div>
@@ -1154,8 +1693,6 @@ export default function DashboardPage() {
               </div>
 
             </div>
-          )}
-            </>
           )}
         </main>
       </div>

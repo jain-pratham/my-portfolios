@@ -17,6 +17,7 @@ const seedDefaultUsers = async (): Promise<void> => {
         email: adminEmail,
         password: adminPassword,
         role: "admin",
+        isVerified: true,
       });
       console.log(`Default Admin created: ${adminEmail}`);
     }
@@ -30,6 +31,7 @@ const seedDefaultUsers = async (): Promise<void> => {
         email: userEmail,
         password: "Jpdtp5!!",
         role: "user",
+        isVerified: true,
       });
       console.log(`Default User created: ${userEmail}`);
     }
@@ -43,6 +45,7 @@ const seedDefaultUsers = async (): Promise<void> => {
         email: demoEmail,
         password: "Jpdtp5!!",
         role: "demo",
+        isVerified: true,
       });
       console.log(`Default Demo created: ${demoEmail}`);
     }

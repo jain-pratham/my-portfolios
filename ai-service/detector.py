@@ -29,7 +29,7 @@ IMGBB_API_KEY ="b41d8cd80808d59eba22407cf32b0ec2"
 
 # Unique Camera Key generated from Next.js Dashboard settings
 # Replace with your generated key (e.g. CAM-ABCDEF)
-CAMERA_KEY = "CAM-ABKF0C"
+CAMERA_KEY = "CAM-48X8WB"
 
 # Local Next.js alert handler endpoint
 NEXTJS_ALERT_API = "http://localhost:3000/api/alerts"

@@ -21,7 +21,7 @@ CAMERA_URL = "http://192.168.1.15:8080/video"
 API_BASE_URL = "http://localhost:3000/api/v1"
 
 # Unique credentials provisioned from the Next.js portal
-CAMERA_KEY = "CAM-89F3A1"
+CAMERA_KEY = "CAM-48X8WB"
 SECRET_TOKEN = "your_camera_secret_token_here"
 
 # Free ImgBB cloud key (from https://api.imgbb.com/)
