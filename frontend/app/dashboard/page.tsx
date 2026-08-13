@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Sidebar, { NavItem } from '../../components/layout/Sidebar';
+import { LayoutDashboard, Users, UserPlus, Settings, CreditCard, Video, History, UserCircle, Bell, Eye, ArrowUpCircle } from 'lucide-react';
 
 interface UserData {
   _id: string;
@@ -31,12 +33,38 @@ interface SecurityEvent {
   status: 'unread' | 'read';
 }
 
-export default function DashboardPage() {
+
+const NAVIGATION_ITEMS: NavItem[] = [
+  { label: 'Dashboard', href: '/dashboard?tab=dashboard', icon: LayoutDashboard, roles: ['admin', 'user', 'demo'] },
+  { label: 'Customers', href: '/dashboard?tab=customers', icon: Users, roles: ['admin'], children: [
+    { label: 'All Customers', href: '/dashboard?tab=customers', icon: Users },
+    { label: 'Add Customer', href: '/dashboard?tab=add_customer', icon: UserPlus }
+  ]},
+  { label: 'Settings', href: '/dashboard?tab=settings', icon: Settings, roles: ['admin', 'user'] },
+  { label: 'Subscription', href: '/dashboard?tab=subscription', icon: CreditCard, roles: ['admin'] },
+  { label: 'Live Camera', href: '/dashboard?tab=live_camera', icon: Video, roles: ['user'] },
+  { label: 'Subscription Detail', href: '/dashboard?tab=subscription_detail', icon: CreditCard, roles: ['user'] },
+  { label: 'Event History', href: '/dashboard?tab=event_history', icon: History, roles: ['user'] },
+  { label: 'Profile', href: '/dashboard?tab=profile', icon: UserCircle, roles: ['user'] },
+  { label: 'Notification', href: '/dashboard?tab=notification', icon: Bell, roles: ['user'] },
+  { label: 'Demo Overview', href: '/dashboard?tab=demo_overview', icon: Eye, roles: ['demo'] },
+  { label: 'Upgrade Account', href: '/dashboard?tab=upgrade_account', icon: ArrowUpCircle, roles: ['demo'] },
+];
+
+import { Suspense } from 'react';
+
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get('tab');
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>(urlTab || 'dashboard');
+
+  useEffect(() => {
+    if (urlTab) setActiveTab(urlTab);
+  }, [urlTab]);
   const [tabLoaded, setTabLoaded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
@@ -512,279 +540,6 @@ export default function DashboardPage() {
 
   const avatarInitials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CW';
 
-  const renderSidebar = (isMobile: boolean) => {
-    const collapsed = !isMobile && sidebarCollapsed;
-    const clickHandler = (tabId: string) => {
-      setActiveTab(tabId);
-      if (isMobile) {
-        setIsMobileOpen(false);
-      }
-    };
-
-    return (
-      <div className="h-full flex flex-col justify-between select-none">
-        <div>
-          {/* Top Brand & Logo */}
-          <div className={`h-16 ${collapsed ? 'px-2' : 'px-4'} flex items-center justify-between border-b border-sidebar-border bg-black/5 dark:bg-black/25`}>
-            {!collapsed ? (
-              <div className="flex items-center gap-2 h-full">
-                <img 
-                  src="/logo.png" 
-                  alt="CoreWatch Logo" 
-                  className="h-8 w-8 object-contain shrink-0"
-                />
-                <span className="font-extrabold text-xs tracking-wider uppercase bg-gradient-to-r from-sidebar-foreground to-[#785D32] dark:from-[#FAF6EE] dark:to-[#C0A06E] bg-clip-text text-transparent">
-                  {currentRole === 'admin' ? 'CoreWatch Admin' : currentRole === 'demo' ? 'CoreWatch Demo' : 'CoreWatch AI'}
-                </span>
-              </div>
-            ) : (
-              <div className="w-full flex justify-center">
-                <img 
-                  src="/logo.png" 
-                  alt="CoreWatch Logo" 
-                  className="h-8 w-8 object-contain shrink-0"
-                />
-              </div>
-            )}
-
-            {!collapsed && !isMobile && (
-              <button
-                onClick={() => setSidebarCollapsed(true)}
-                className="text-[#785D32] dark:text-[#C0A06E] hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 p-1.5 rounded transition-all cursor-pointer"
-                title="Collapse Sidebar"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-            )}
-
-            {isMobile && (
-              <button
-                onClick={() => setIsMobileOpen(false)}
-                className="text-[#785D32] dark:text-[#C0A06E] hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 p-1.5 rounded transition-all cursor-pointer"
-                title="Close Menu"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          {collapsed && (
-            <div className="h-16 flex items-center justify-center border-b border-sidebar-border bg-black/5 dark:bg-black/25">
-              <button
-                onClick={() => setSidebarCollapsed(false)}
-                className="text-[#785D32] dark:text-[#C0A06E] hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5 p-1.5 rounded transition-all cursor-pointer"
-                title="Expand Sidebar"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* User Profile Card inside Sidebar */}
-          {!collapsed ? (
-            <div className="mx-3 my-3 p-3 rounded-lg border border-sidebar-border bg-black/[0.02] dark:bg-white/[0.02] flex items-center gap-3 shadow-inner">
-              <div className="w-8 h-8 rounded-full bg-[#785D32] text-[#FAF6EE] font-black text-xs flex items-center justify-center relative shrink-0 ring-1 ring-[#FAF6EE]/20 shadow-md">
-                {avatarInitials}
-                <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-[#0A0B0E]"></span>
-              </div>
-              <div className="truncate min-w-0 flex-1">
-                <div className="text-[13.5px] font-bold text-sidebar-foreground truncate leading-tight">{user?.name}</div>
-                <div className="text-[10px] font-black text-[#785D32] dark:text-[#C0A06E] uppercase tracking-wider mt-0.5 leading-none">{user?.role}</div>
-              </div>
-            </div>
-          ) : (
-            <div className="my-3 flex justify-center">
-              <div className="w-8 h-8 rounded-full bg-[#785D32] text-[#FAF6EE] font-black text-xs flex items-center justify-center relative shrink-0 ring-1 ring-[#FAF6EE]/20 shadow-md" title={`${user?.name} (${user?.role})`}>
-                {avatarInitials}
-                <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-[#0A0B0E]"></span>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Links Menu */}
-          <nav className="px-2 py-4 space-y-1.5">
-            {menuItems.map((item) => {
-              const hasSubItems = !!item.subItems;
-              const isSubmenuOpen = !!openSubmenus[item.id];
-              const isParentActive = hasSubItems && item.subItems.some((sub: any) => sub.id === activeTab);
-              const isActive = activeTab === item.id || isParentActive;
-
-              if (hasSubItems) {
-                return (
-                  <div key={item.id} className="space-y-1">
-                    <button
-                      onClick={() => {
-                        if (collapsed) {
-                          setSidebarCollapsed(false);
-                          setOpenSubmenus((prev) => ({ ...prev, [item.id]: true }));
-                        } else {
-                          setOpenSubmenus((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
-                        }
-                      }}
-                      className={`w-full relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 cursor-pointer ${
-                        isActive
-                          ? 'bg-gradient-to-r from-[#785D32]/15 to-transparent text-sidebar-foreground border-l-2 border-[#785D32] shadow-[0_4px_12px_rgba(120,93,50,0.08)]'
-                          : 'text-sidebar-foreground/75 hover:translate-x-[3.5px] hover:text-sidebar-foreground hover:bg-black/[0.03] dark:hover:bg-white/[0.03]'
-                      }`}
-                      title={collapsed ? item.label : undefined}
-                    >
-                      <svg className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-[#C0A06E]' : 'text-sidebar-foreground/45'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                      </svg>
-                      
-                      {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                      
-                      {!collapsed && (
-                        <svg className={`w-3 h-3 transition-transform duration-200 text-sidebar-foreground/35 ${isSubmenuOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      )}
-                    </button>
-
-                    {/* Submenu Items */}
-                    <div 
-                      className="grid transition-all duration-300 ease-in-out overflow-hidden"
-                      style={{ 
-                        gridTemplateRows: (isSubmenuOpen && !collapsed) ? '1fr' : '0fr',
-                        opacity: (isSubmenuOpen && !collapsed) ? 1 : 0
-                      }}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="pl-5 ml-4 border-l border-sidebar-border space-y-1 py-1">
-                          {item.subItems.map((sub: any) => {
-                            const isSubActive = activeTab === sub.id;
-                            return (
-                              <button
-                                key={sub.id}
-                                onClick={() => clickHandler(sub.id)}
-                                className={`w-full relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all duration-150 cursor-pointer ${
-                                  isSubActive
-                                    ? 'text-sidebar-foreground font-bold bg-[#785D32]/15'
-                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:translate-x-[2px]'
-                                }`}
-                                title={sub.label}
-                              >
-                                {isSubActive && (
-                                  <span className="absolute left-[-21px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#785D32]"></span>
-                                )}
-                                <span className="truncate text-left">{sub.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => clickHandler(item.id)}
-                  className={`w-full relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 cursor-pointer ${
-                    isActive
-                      ? 'bg-gradient-to-r from-[#785D32]/15 to-transparent text-sidebar-foreground border-l-2 border-[#785D32] shadow-[0_4px_12px_rgba(120,93,50,0.08)]'
-                      : 'text-sidebar-foreground/75 hover:translate-x-[3.5px] hover:text-sidebar-foreground hover:bg-black/[0.03] dark:hover:bg-white/[0.03]'
-                  }`}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <svg className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-[#C0A06E]' : 'text-sidebar-foreground/45'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                  </svg>
-                  
-                  {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Sidebar Bottom Controls */}
-        <div className="p-3 border-t border-sidebar-border space-y-1.5 bg-black/5 dark:bg-black/25">
-          {!collapsed ? (
-            <div className="grid grid-cols-2 gap-1 mb-1 p-1 rounded-lg border border-sidebar-border bg-black/[0.02] dark:bg-white/[0.01]">
-              <button
-                onClick={() => clickHandler('settings')}
-                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded text-[12.5px] font-semibold transition-all cursor-pointer ${
-                  activeTab === 'settings'
-                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
-                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                </svg>
-                <span>Settings</span>
-              </button>
-
-              <button
-                onClick={() => clickHandler('profile')}
-                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded text-[12.5px] font-semibold transition-all cursor-pointer ${
-                  activeTab === 'profile'
-                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
-                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Profile</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 p-1 rounded-lg border border-sidebar-border bg-black/[0.02] dark:bg-white/[0.01]">
-              <button
-                onClick={() => clickHandler('settings')}
-                className={`flex items-center justify-center p-1.5 rounded transition-all cursor-pointer ${
-                  activeTab === 'settings'
-                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
-                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
-                }`}
-                title="Settings"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => clickHandler('profile')}
-                className={`flex items-center justify-center p-1.5 rounded transition-all cursor-pointer ${
-                  activeTab === 'profile'
-                    ? 'bg-[#785D32]/20 border border-[#785D32]/35 text-sidebar-foreground shadow-sm'
-                    : 'border border-transparent text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5'
-                }`}
-                title="Profile"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-bold border border-red-500/20 dark:border-red-500/15 bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
-            title="Logout"
-          >
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {!collapsed && <span>Logout</span>}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className={`h-screen overflow-hidden flex font-sans bg-background text-foreground transition-colors duration-200 ${theme === 'dark' ? 'dark' : ''}`}>
       
@@ -796,29 +551,27 @@ export default function DashboardPage() {
         ></div>
       )}
 
-      {/* Mobile Drawer Aside */}
-      <aside className={`fixed top-0 bottom-0 left-0 w-64 border-r border-sidebar-border text-sidebar-foreground flex flex-col justify-between transition-transform duration-300 z-50 select-none shadow-2xl lg:hidden ${
-        theme === 'dark' ? 'bg-gradient-to-b from-[#0A0B0E] via-[#050608] to-black' : 'bg-sidebar'
-      } ${
-        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        {renderSidebar(true)}
-      </aside>
-
-      {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col justify-between shrink-0 transition-all duration-300 z-30 select-none border-r border-sidebar-border shadow-[4px_0_24px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.8)] text-sidebar-foreground ${
-        theme === 'dark' ? 'bg-gradient-to-b from-[#0A0B0E] via-[#050608] to-black' : 'bg-sidebar'
-      } ${
-        sidebarCollapsed ? 'w-20' : 'w-64'
-      }`}>
-        {renderSidebar(false)}
-      </aside>
+      <Sidebar
+        items={NAVIGATION_ITEMS}
+        user={{ firstName: user?.name, email: user?.email, role: currentRole }}
+        logoIcon={LayoutDashboard}
+        logoTitle="COREWATCH"
+        logoSubtitle="Control Center"
+        profileHref="/dashboard?tab=profile"
+        changePasswordHref="/dashboard?tab=profile"
+        twoFactorHref="/dashboard?tab=profile"
+        mobileOpen={isMobileOpen}
+        onClose={() => setIsMobileOpen(false)}
+        collapsed={sidebarCollapsed}
+        onCollapse={setSidebarCollapsed}
+        onLogout={() => { localStorage.clear(); router.push('/login'); }}
+      />
       {/* ========================================================================= */}
       {/* RIGHT MAIN WORKSPACE AREA */}
       {/* ========================================================================= */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300">
            {/* TOP HEADER BAR */}
-        <header className="h-16 border-b border-border bg-card/85 backdrop-blur-md px-6 flex items-center justify-between z-20 shrink-0 shadow-sm">
+        <header className="h-16 border-b border-border bg-sidebar/90 backdrop-blur-md px-6 flex items-center justify-between z-20 shrink-0 shadow-sm">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMobileOpen(true)}
@@ -1700,3 +1453,12 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
