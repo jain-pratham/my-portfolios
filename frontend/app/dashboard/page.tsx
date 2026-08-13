@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar, { NavItem } from '../../components/layout/Sidebar';
-import { LayoutDashboard, Users, UserPlus, Settings, CreditCard, Video, History, UserCircle, Bell, Eye, ArrowUpCircle } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, Settings, CreditCard, Video, History, UserCircle, Bell, Eye, ArrowUpCircle, Map } from 'lucide-react';
 
 interface UserData {
   _id: string;
@@ -36,13 +36,14 @@ interface SecurityEvent {
 
 const NAVIGATION_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard?tab=dashboard', icon: LayoutDashboard, roles: ['admin', 'user', 'demo'] },
-  { label: 'Customers', href: '/dashboard?tab=customers', icon: Users, roles: ['admin'], children: [
-    { label: 'All Customers', href: '/dashboard?tab=customers', icon: Users },
+  { label: 'Customers', href: '/dashboard?tab=all_customers', icon: Users, roles: ['admin'], children: [
+    { label: 'All Customers', href: '/dashboard?tab=all_customers', icon: Users },
     { label: 'Add Customer', href: '/dashboard?tab=add_customer', icon: UserPlus }
   ]},
   { label: 'Settings', href: '/dashboard?tab=settings', icon: Settings, roles: ['admin', 'user'] },
   { label: 'Subscription', href: '/dashboard?tab=subscription', icon: CreditCard, roles: ['admin'] },
   { label: 'Live Camera', href: '/dashboard?tab=live_camera', icon: Video, roles: ['user'] },
+  { label: 'Security Zones', href: '/dashboard?tab=zones', icon: Map, roles: ['user'] },
   { label: 'Subscription Detail', href: '/dashboard?tab=subscription_detail', icon: CreditCard, roles: ['user'] },
   { label: 'Event History', href: '/dashboard?tab=event_history', icon: History, roles: ['user'] },
   { label: 'Profile', href: '/dashboard?tab=profile', icon: UserCircle, roles: ['user'] },
@@ -52,6 +53,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
 ];
 
 import { Suspense } from 'react';
+import ZoneManagementView from '../../components/zones/ZoneManagementView';
 
 function DashboardContent() {
   const router = useRouter();
@@ -515,6 +517,7 @@ function DashboardContent() {
     user: [
       { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
       { id: 'live_camera', label: 'Live Camera', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+      { id: 'zones', label: 'Security Zones', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
       { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
       { id: 'subscription_detail', label: 'Subscription Detail', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
       { id: 'event_history', label: 'Event History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
@@ -1121,7 +1124,7 @@ function DashboardContent() {
                     <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-3 col-span-1 sm:col-span-3">
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-muted-foreground font-bold block">Your Active Camera Key</span>
-                        <span className="text-[10px] text-muted-foreground">Configure this key inside your Python detector.py script</span>
+                        <span className="text-[10px] text-muted-foreground">Configure this key in your AI Service .env file (CAMERA_KEY)</span>
                       </div>
                       {activeCameraKey ? (
                         <div className="flex gap-2">
@@ -1221,6 +1224,16 @@ function DashboardContent() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {activeTab === 'zones' && (
+                <ZoneManagementView
+                  user={user}
+                  cameras={cameras}
+                  activeCameraKey={activeCameraKey}
+                  setActiveCameraKey={setActiveCameraKey}
+                  apiUrl={API_URL}
+                />
               )}
 
               {activeTab === 'subscription_detail' && (
@@ -1352,7 +1365,7 @@ function DashboardContent() {
                       <div className="text-xs text-muted-foreground">Generating camera access key...</div>
                     )}
                     <p className="text-[10px] text-muted-foreground leading-normal">
-                      Instructions: Copy this key and paste it inside the `cameraKey` configuration of your Python stream client (`detector.py`).
+                      Instructions: Copy this key and paste it inside the `CAMERA_KEY` configuration of your AI Service environment variable.
                     </p>
                   </div>
 
@@ -1461,4 +1474,5 @@ export default function DashboardPage() {
     </Suspense>
   );
 }
+
 

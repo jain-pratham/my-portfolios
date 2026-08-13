@@ -8,7 +8,7 @@ import { protect, isAdmin } from "./middleware/authMiddleware";
 import { initSocket } from "./config/socket";
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // Connect to Database
 connectDB();
@@ -58,12 +58,20 @@ app.post("/api/customers/set-password", setPassword);
 
 // Import event controllers
 import { createEvent, getEvents, markRead, markAllRead } from "./controllers/eventController";
+import { createZone, getZones, getZoneById, updateZone, deleteZone } from "./controllers/zoneController";
 
 // CCTV Alert Routes
 app.post("/api/events", createEvent);
 app.get("/api/events", protect, getEvents);
 app.put("/api/events/read-all", protect, markAllRead);
 app.put("/api/events/:id/read", protect, markRead);
+
+// Zone Management Routes
+app.post("/api/zones", protect, createZone);
+app.get("/api/zones", protect, getZones);
+app.get("/api/zones/:id", protect, getZoneById);
+app.patch("/api/zones/:id", protect, updateZone);
+app.delete("/api/zones/:id", protect, deleteZone);
 
 // Serve Static Uploads (for CCTV snapshots)
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
