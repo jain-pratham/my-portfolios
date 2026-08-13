@@ -359,7 +359,7 @@ const Sidebar = React.memo(function Sidebar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen flex flex-col transition-all duration-300 ease-out lg:translate-x-0 lg:z-20 font-sans antialiased",
+        "fixed lg:static left-0 top-0 z-40 h-screen flex flex-col transition-all duration-300 ease-out lg:translate-x-0 lg:z-20 font-sans antialiased",
         "bg-[var(--sidebar-background)] dark:bg-gradient-to-b dark:from-[#0A0B0E] dark:via-[#050608] dark:to-black border-r border-[var(--sidebar-border)] shadow-[4px_0_24px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.8)]",
         collapsed ? "w-[68px]" : "w-[260px]",
         mobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -493,4 +493,5 @@ const Sidebar = React.memo(function Sidebar({
 });
 
 export default Sidebar;
+
 
