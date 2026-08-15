@@ -12,8 +12,22 @@ class TrackState:
         self.previous_position = position  # (x, y)
         self.velocity = (0.0, 0.0)  # (vx, vy)
         self.current_zone = None
+        self.zone_type = None
         self.zone_entered_at = None
         self.last_alert_times = {}  # event_type -> timestamp
+        
+        # Adaptive Inference Optimization & Identity fields
+        self.identity_status = "UNKNOWN"
+        self.identity_id = None
+        self.identity_confidence = 0.0
+        self.last_identity_verified_at = 0.0
+        self.is_near_restricted = False
+        self.has_suspicious_behavior = False
+        
+        # Bounding box caching for smooth skipped frame rendering
+        self.last_bbox = None
+        self.last_confidence = 0.0
+        self.label = "person"
 
     def update(self, timestamp: float, position: tuple):
         self.previous_position = self.current_position
@@ -66,6 +80,9 @@ class TrackManager:
 
             # Enrich detection with history from track state
             track_state = self.tracks[track_id]
+            track_state.last_bbox = det.get("bbox")
+            track_state.last_confidence = det.get("confidence", 0.0)
+            track_state.label = det.get("label", "person")
             det["firstSeen"] = track_state.first_seen
             det["lastSeen"] = track_state.last_seen
             det["velocity"] = track_state.velocity

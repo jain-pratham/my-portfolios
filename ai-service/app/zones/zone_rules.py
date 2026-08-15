@@ -40,6 +40,7 @@ class ZoneRulesEngine:
             
             for zone in zones:
                 zone_id = zone["_id"]
+                
                 # Polygon check using coordinate conversion
                 if inside_zone(foot_pt, zone["points"], width, height):
                     active_tracks_in_zones[zone_id].add(track_id)

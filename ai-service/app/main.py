@@ -17,6 +17,11 @@ from app.camera_security.offline_detector import CameraOfflineDetector
 from app.camera_security.tampering_detector import CameraTamperingDetector
 from app.events.event_engine import EventEngine
 from app.api.routes import health, camera, detection
+from app.inference.priority import InferencePriority
+from app.inference.motion_gate import MotionGate
+from app.inference.identity_client import IdentityClient
+from app.inference.inference_scheduler import InferenceScheduler
+from app.zones.polygon import inside_zone
 
 # Setup logging
 setup_logging()
@@ -52,7 +57,14 @@ class CameraRuntime:
     def __init__(self, camera_key: str, camera_url: str, detector: PersonDetector):
         self.camera_key = camera_key
         self.camera_url = camera_url
-        self.detector = detector
+        
+        # Isolation: If a normal detector is passed, we create a camera-isolated one.
+        # If it is a Mock/MagicMock, we preserve it for test isolation.
+        is_mock = "Mock" in type(detector).__name__ or "MagicMock" in type(detector).__name__
+        if is_mock:
+            self.detector = detector
+        else:
+            self.detector = PersonDetector(camera_key=self.camera_key)
 
         # Pipelines
         self.stream = CameraStream(self.camera_url)
@@ -82,6 +94,15 @@ class CameraRuntime:
         self.active_tracks_count = 0
         self.last_ai_time = 0.0
 
+        # Adaptive Inference components (per-camera)
+        self.motion_gate = MotionGate()
+        self.scheduler = InferenceScheduler(self.camera_key)
+        self.identity_client = IdentityClient()
+        
+        # Security overrides & state trackers
+        self.active_security_event = False
+        self.last_security_event_at = 0.0
+
     def start(self):
         self.running = True
         # Fetch initial zones before launching loop
@@ -95,11 +116,59 @@ class CameraRuntime:
         if self.thread:
             self.thread.join(timeout=3.0)
         self.stream.release()
+        # Memory safety: release YOLO instance for this camera key from cache
+        YOLOModelManager.remove_model(self.camera_key)
         logger.info(f"[System] Stopped camera runtime thread for {self.camera_key}")
 
-    def _loop(self):
-        time_per_frame = 1.0 / settings.AI_PROCESS_FPS
+    def _calculate_proximity(self, foot_pt, zones, width: int, height: int) -> bool:
+        """
+        Calculates if a foot point is near any RESTRICTED or VALUABLE zone.
+        Using normalized geometry coordinates (0.0 to 1.0).
+        """
+        if width <= 0 or height <= 0:
+            return False
+            
+        px = foot_pt.get("x", 0.0) / width
+        py = foot_pt.get("y", 0.0) / height
+        threshold = float(getattr(settings, "ZONE_PROXIMITY_THRESHOLD", 0.08))
+
+        for zone in zones:
+            if zone.get("type") in ("RESTRICTED", "VALUABLE"):
+                dist = self._min_distance_to_polygon(px, py, zone.get("points", []))
+                if dist < threshold:
+                    return True
+        return False
+
+    def _min_distance_to_polygon(self, px: float, py: float, poly_points: list) -> float:
+        min_dist = float('inf')
+        if len(poly_points) == 0:
+            return min_dist
+            
+        p = (px, py)
+        pts = [(float(pt.get("x", 0.0)), float(pt.get("y", 0.0))) for pt in poly_points]
         
+        for i in range(len(pts)):
+            a = pts[i]
+            b = pts[(i + 1) % len(pts)]
+            
+            # Distance from p to segment ab
+            ab = (b[0] - a[0], b[1] - a[1])
+            ap = (p[0] - a[0], p[1] - a[1])
+            
+            ab_len_sq = ab[0]**2 + ab[1]**2
+            if ab_len_sq == 0:
+                dist = np.sqrt(ap[0]**2 + ap[1]**2)
+            else:
+                t = max(0.0, min(1.0, (ap[0]*ab[0] + ap[1]*ab[1]) / ab_len_sq))
+                closest = (a[0] + t*ab[0], a[1] + t*ab[1])
+                dist = np.sqrt((p[0] - closest[0])**2 + (p[1] - closest[1])**2)
+                
+            if dist < min_dist:
+                min_dist = dist
+                
+        return min_dist
+
+    def _loop(self):
         # Open camera stream
         if not self.stream.open():
             logger.error(f"[Camera] Could not connect to camera stream for key {self.camera_key}. Loop will retry dynamically.")
@@ -108,10 +177,9 @@ class CameraRuntime:
             try:
                 frame = self.stream.read_frame()
                 frame_received = frame is not None
-
                 now = time.time()
 
-                # 1. Update camera connectivity health
+                # 1. Update camera connectivity health (runs on every stream frame)
                 offline_events = self.offline_detector.update(frame_received, now)
                 if len(offline_events) > 0:
                     self.event_engine.process_events(offline_events, None, [], now)
@@ -122,27 +190,116 @@ class CameraRuntime:
 
                 self.last_frame = frame
 
-                # 2. Enforce frame rate scheduler
-                if now - self.last_ai_time >= time_per_frame:
-                    self.last_ai_time = now
+                # 2. Check for camera visual tampering (runs on every received frame, independent of YOLO)
+                tamper_events = self.tampering_detector.update(frame, now)
+                if len(tamper_events) > 0:
+                    self.event_engine.process_events(tamper_events, frame, [], now)
 
-                    # 3. Check for camera visual tampering (black lens, frozen feed, view shift)
-                    tamper_events = self.tampering_detector.update(frame, now)
-                    if len(tamper_events) > 0:
-                        self.event_engine.process_events(tamper_events, frame, [], now)
+                # 3. Adaptive Inference Scheduler Check (Fail-Safe protected)
+                should_run_yolo = True
+                motion_score = 0.0
+                try:
+                    # Run cheap MotionGate (negligible CPU cost on 160x120 resized image)
+                    motion_res = self.motion_gate.update(frame)
+                    motion_detected = motion_res["motionDetected"]
+                    motion_score = motion_res["motionScore"]
 
-                    # 4. Run single-pass YOLO + ByteTrack tracking
+                    # Update event cooldown state
+                    cooldown_dur = float(getattr(settings, "PRIORITY_COOLDOWN_SECONDS", 10.0))
+                    if self.active_security_event and now - self.last_security_event_at > cooldown_dur:
+                        self.active_security_event = False
+
+                    # Build context for the policy and scheduler
+                    scheduler_tracks = []
+                    for track_id, track_state in self.track_manager.tracks.items():
+                        is_new = (now - track_state.first_seen <= 1.0)
+                        scheduler_tracks.append({
+                            "trackId": track_id,
+                            "identityStatus": track_state.identity_status,
+                            "zoneType": track_state.zone_type,
+                            "isNearRestricted": track_state.is_near_restricted,
+                            "hasSuspiciousBehavior": track_state.has_suspicious_behavior,
+                            "isNew": is_new
+                        })
+
+                    context = {
+                        "motionDetected": motion_detected,
+                        "motionScore": motion_score,
+                        "activeTracks": scheduler_tracks,
+                        "activeSecurityEvent": self.active_security_event
+                    }
+
+                    # Determine YOLO scheduling
+                    should_run_yolo = self.scheduler.should_run_inference(now, context)
+                except Exception as e:
+                    logger.error(f"[Scheduler] Fail-safe fallback triggered due to exception: {e}", exc_info=True)
+                    should_run_yolo = True
+
+                # 4. YOLO Inference Execution Gate
+                if should_run_yolo:
+                    start_inference_time = time.time()
+
+                    # Run single-pass YOLO + ByteTrack tracking (camera-isolated)
                     detections = self.detector.track_persons(frame)
 
-                    # 5. Enrich tracks with movement historical parameters
+                    # Enrich tracks with movement historical parameters
                     enriched_detections = self.track_manager.update_tracks(detections, now)
                     self.active_tracks_count = len(enriched_detections)
 
-                    # 6. Retrieve active zones cache
+                    # Retrieve active zones
                     zones = self.zone_manager.get_active_zones()
-
-                    # 7. Evaluate polygon containment rules (foot points)
                     h, w = frame.shape[:2]
+
+                    # Reset track states
+                    for track_state in self.track_manager.tracks.values():
+                        track_state.current_zone = None
+                        track_state.zone_type = None
+                        track_state.is_near_restricted = False
+
+                    # Update zone containment, proximity and identities
+                    for det in enriched_detections:
+                        tid = det.get("trackId")
+                        if tid is not None and tid in self.track_manager.tracks:
+                            track_state = self.track_manager.tracks[tid]
+                            foot_pt = det["footPoint"]
+
+                            # Determine zone containment
+                            for zone in zones:
+                                if inside_zone(foot_pt, zone["points"], w, h):
+                                    track_state.current_zone = zone["_id"]
+                                    track_state.zone_type = zone.get("type")
+                                    det["zoneId"] = zone["_id"]
+                                    det["zoneType"] = zone.get("type")
+                                    det["zoneName"] = zone.get("name")
+                                    break
+
+                            # Calculate zone proximity (approach to restricted/valuable zones)
+                            track_state.is_near_restricted = self._calculate_proximity(foot_pt, zones, w, h)
+
+                            # Verify identity status (only if needed)
+                            identity_recheck_seconds = float(getattr(settings, "IDENTITY_RECHECK_SECONDS", 30.0))
+                            need_identity = (
+                                track_state.identity_status == "UNKNOWN" or
+                                track_state.identity_confidence < 0.6 or
+                                now - track_state.last_identity_verified_at > identity_recheck_seconds or
+                                track_state.zone_type in ("RESTRICTED", "VALUABLE")
+                            )
+                            if need_identity and (now - track_state.last_identity_verified_at > 5.0):
+                                bbox = [det["bbox"]["x1"], det["bbox"]["y1"], det["bbox"]["x2"], det["bbox"]["y2"]]
+                                identity_res = self.identity_client.verify_identity(tid, frame, bbox)
+                                
+                                if track_state.identity_status != identity_res.identity_status:
+                                    logger.info(f"[Inference] Verified track ID {tid} identity status: {identity_res.identity_status}")
+                                    
+                                track_state.identity_status = identity_res.identity_status
+                                track_state.identity_id = identity_res.identity_id
+                                track_state.identity_confidence = identity_res.confidence
+                                track_state.last_identity_verified_at = now
+
+                            det["identityStatus"] = track_state.identity_status
+                            det["identityId"] = track_state.identity_id
+
+                    # Evaluate polygon containment rules (foot points)
                     zone_events = self.zone_rules_engine.evaluate(
                         camera_id=self.camera_key,
                         zones=zones,
@@ -152,37 +309,43 @@ class CameraRuntime:
                         timestamp=now
                     )
 
-                    # 8. Evaluate behaviors (loitering, pacing)
+                    # Evaluate behaviors (loitering, pacing)
                     behavior_events = []
                     for det in enriched_detections:
                         track_id = det.get("trackId")
                         if track_id is None:
                             continue
 
+                        track_state = self.track_manager.tracks[track_id]
                         foot_pt = (det["footPoint"]["x"], det["footPoint"]["y"])
                         first_seen = det.get("firstSeen", now)
 
-                        # Movement calculations
                         metrics = self.movement_tracker.update(track_id, foot_pt, now)
 
                         # Check loitering rule
                         if self.loitering_detector.check_loitering(track_id, first_seen, now):
+                            track_state.has_suspicious_behavior = True
                             behavior_events.append({
                                 "eventType": "LOITERING",
                                 "cameraId": self.camera_key,
                                 "trackId": track_id,
                                 "timestamp": now,
-                                "bbox": det.get("bbox")
+                                "bbox": det.get("bbox"),
+                                "zoneId": track_state.current_zone,
+                                "zoneType": track_state.zone_type
                             })
 
                         # Check suspicious pacing rule
                         if self.suspicious_detector.check_suspicious_movement(track_id, metrics):
+                            track_state.has_suspicious_behavior = True
                             behavior_events.append({
                                 "eventType": "SUSPICIOUS_MOVEMENT_PATTERN",
                                 "cameraId": self.camera_key,
                                 "trackId": track_id,
                                 "timestamp": now,
-                                "bbox": det.get("bbox")
+                                "bbox": det.get("bbox"),
+                                "zoneId": track_state.current_zone,
+                                "zoneType": track_state.zone_type
                             })
 
                     # Cleanup behavior instances for dead tracks
@@ -193,18 +356,68 @@ class CameraRuntime:
                         self.loitering_detector.reset_track(tid)
                         self.suspicious_detector.reset_track(tid)
 
-                    # 9. Process events
+                    # Determine active security event and trigger cooldown/boost
                     all_events = zone_events + behavior_events
+                    has_security_event = False
+                    for event in all_events:
+                        e_type = event["eventType"]
+                        z_id = event.get("zoneId")
+                        if e_type in ("ZONE_ENTRY", "ZONE_DWELL"):
+                            zone = next((z for z in zones if z["_id"] == z_id), None)
+                            if zone and zone.get("type") in ("RESTRICTED", "VALUABLE"):
+                                has_security_event = True
+                                break
+                        elif e_type in ("LOITERING", "SUSPICIOUS_MOVEMENT_PATTERN"):
+                            has_security_event = True
+                            break
+
+                    if has_security_event:
+                        if not self.active_security_event:
+                            logger.info(f"[Inference] Camera {self.camera_key} escalates priority: Security event active")
+                        self.active_security_event = True
+                        self.last_security_event_at = now
+
+                    # Process events in EventEngine
                     if len(all_events) > 0:
                         self.event_engine.process_events(all_events, frame, zones, now)
 
-                    # 10. Cache annotated preview frame
+                    # Cache annotated preview frame
                     annotated_frame = frame.copy()
                     self._draw_annotations(annotated_frame, enriched_detections, zones)
                     self.last_annotated_frame = annotated_frame
 
+                    # Record telemetry metrics
+                    end_inference_time = time.time()
+                    latency_ms = (end_inference_time - start_inference_time) * 1000.0
+                    self.scheduler.state.record_inference(now, latency_ms)
+                    self.scheduler.state.active_tracks = len(self.track_manager.tracks)
+                    self.scheduler.state.motion_score = motion_score
                 else:
-                    time.sleep(0.001)
+                    # Skipped frame: Record skipped in scheduler metrics
+                    self.scheduler.state.record_skipped()
+                    self.scheduler.state.active_tracks = len(self.track_manager.tracks)
+                    self.scheduler.state.motion_score = motion_score
+                    
+                    # Cache annotated preview frame with cached detections to keep the stream super smooth
+                    cached_detections = []
+                    for tid, track_state in self.track_manager.tracks.items():
+                        if track_state.last_bbox is not None:
+                            # Re-verify if track is active (not expired)
+                            if now - track_state.last_seen <= self.track_manager.track_lost_grace_seconds:
+                                cached_detections.append({
+                                    "trackId": tid,
+                                    "confidence": track_state.last_confidence,
+                                    "label": track_state.label,
+                                    "bbox": track_state.last_bbox
+                                })
+                    
+                    zones = self.zone_manager.get_active_zones()
+                    annotated_frame = frame.copy()
+                    self._draw_annotations(annotated_frame, cached_detections, zones)
+                    self.last_annotated_frame = annotated_frame
+                    
+                    # Sleep briefly to avoid busy-looping
+                    time.sleep(0.005)
 
             except Exception as e:
                 logger.error(f"[Camera] Error inside processing loop for camera {self.camera_key}: {e}", exc_info=True)

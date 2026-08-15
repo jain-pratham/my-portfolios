@@ -3,6 +3,52 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { 
+  Sparkles, 
+  Shield, 
+  Users, 
+  Flame, 
+  DollarSign, 
+  VideoOff, 
+  MessageSquare, 
+  Eye, 
+  Check, 
+  X 
+} from "lucide-react";
+
+const AVAILABLE_AI_FEATURES = [
+  { key: "intrusion_detection", label: "Intrusion Detection", desc: "Real-time human intrusion alerts in restricted security zones" },
+  { key: "loitering_detection", label: "Loitering Detection", desc: "Suspicious lingering alert based on dwell time thresholds" },
+  { key: "fire_smoke", label: "Fire & Smoke Alert", desc: "Safety-oriented detection of active flames and smoke plumes" },
+  { key: "cash_counter", label: "Cash Counter Monitoring", desc: "Commercial safety logs and cashier transaction area auditing" },
+  { key: "camera_offline", label: "Camera Status Monitor", desc: "Automated notifications when camera video stream goes offline" },
+  { key: "whatsapp_alerts", label: "WhatsApp Alerts dispatch", desc: "Real-time video clip webhook dispatcher to WhatsApp accounts" }
+];
+
+const getFeatureIcon = (key: string) => {
+  switch (key) {
+    case "intrusion_detection":
+      return <Shield className="h-3 w-3" />;
+    case "loitering_detection":
+      return <Users className="h-3 w-3" />;
+    case "fire_smoke":
+      return <Flame className="h-3 w-3" />;
+    case "cash_counter":
+      return <DollarSign className="h-3 w-3" />;
+    case "camera_offline":
+      return <VideoOff className="h-3 w-3" />;
+    case "whatsapp_alerts":
+      return <MessageSquare className="h-3 w-3" />;
+    default:
+      return <Check className="h-3 w-3" />;
+  }
+};
+
+const getFeatureLabel = (key: string) => {
+  const feat = AVAILABLE_AI_FEATURES.find((f) => f.key === key);
+  return feat ? feat.label : key;
+};
+
 
 interface UserData {
   _id: string;
@@ -357,7 +403,7 @@ export default function SignupStepsPage() {
   ];
 
   return (
-    <div className="h-screen max-h-screen bg-background text-foreground font-sans relative overflow-hidden flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-background text-foreground font-sans relative overflow-y-auto flex flex-col items-center justify-center py-6 px-4">
       {/* Grid overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808007_1px,transparent_1px),linear-gradient(to_bottom,#80808007_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none"></div>
 
@@ -650,13 +696,13 @@ export default function SignupStepsPage() {
 
           {/* STEP 3: Choose Plan */}
           {step === 3 && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <h2 className="text-xs md:text-sm font-bold text-foreground flex items-center gap-2">
                 <span className="w-1 h-3 bg-primary rounded-full"></span>
                 3. Select Subscription Plan
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {plans.length === 0 ? (
                   <div className="col-span-2 text-center py-8 text-xs text-muted-foreground">
                     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -671,41 +717,95 @@ export default function SignupStepsPage() {
                       <div 
                         key={plan._id}
                         onClick={() => setFormData({ ...formData, plan: plan.name })}
-                        className={`p-3 rounded-lg border transition-all cursor-pointer relative ${
+                        className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer bg-card/85 select-none ${
                           isSelected
                             ? isPlanFree
-                              ? 'border-emerald-500 bg-emerald-500/5 ring-2 ring-emerald-500/20'
-                              : 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                            : 'border-border bg-card hover:border-primary/50'
+                              ? 'border-emerald-500 shadow-md shadow-emerald-500/10 ring-2 ring-emerald-500/20'
+                              : 'border-primary shadow-md shadow-primary/10 ring-2 ring-primary/20'
+                            : 'border-border hover:border-primary/40 shadow-sm'
                         }`}
                       >
                         {plan.isPopular && (
-                          <div className="absolute top-2 right-2 bg-primary/15 border border-primary/20 text-primary text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
-                            Popular
+                          <div className="absolute -top-2.5 right-4 flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#FAF6EE] shadow-sm z-10">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            Most Popular
                           </div>
                         )}
                         {isPlanFree && !plan.isPopular && (
-                          <div className="absolute top-2 right-2 bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                          <div className="absolute -top-2.5 right-4 flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#FAF6EE] shadow-sm z-10">
+                            <Check className="h-2.5 w-2.5" />
                             Recommended
                           </div>
                         )}
 
-                        <div className={`text-[9px] font-mono font-bold mb-0.5 ${isPlanFree ? 'text-emerald-400' : 'text-primary'}`}>
-                          {isPlanFree ? 'PROMO TRIAL' : 'SUBSCRIPTION'}
+                        {/* Card Header */}
+                        <div className="p-4 pb-3 border-b border-border/80">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-extrabold text-foreground">{plan.name}</h3>
+                            {/* Selected Indicator */}
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                              isSelected
+                                ? isPlanFree
+                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  : 'bg-primary border-primary text-[#FAF6EE]'
+                                : 'border-muted-foreground/30 bg-transparent'
+                            }`}>
+                              {isSelected && <span className="text-[9px] font-bold">✓</span>}
+                            </div>
+                          </div>
+                          <p className="mt-1 text-[10px] text-muted-foreground leading-relaxed min-h-[30px] line-clamp-2">
+                            {plan.description}
+                          </p>
+                          <div className="mt-3 flex items-baseline text-foreground">
+                            {isPlanFree ? (
+                              <span className="text-xl font-black text-emerald-500">Free Trial</span>
+                            ) : (
+                              <>
+                                <span className="text-2xl font-black text-foreground">${plan.monthlyPrice}</span>
+                                <span className="ml-0.5 text-[10px] text-muted-foreground font-normal">/mo</span>
+                                <span className="ml-2 text-[9px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded font-mono">
+                                  ${plan.yearlyPrice}/yr
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
 
-                        <h3 className="text-sm font-black text-foreground">{plan.name}</h3>
-                        <p className="text-[9px] text-muted-foreground mt-0.5 leading-relaxed">
-                          {plan.description} Supports up to {plan.maxCameras} camera{plan.maxCameras > 1 ? 's' : ''}.
-                        </p>
+                        {/* Card Body */}
+                        <div className="p-4 py-3 flex-1 flex flex-col space-y-3">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                              <Users className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <span>Camera Limit: <strong className="text-foreground">{plan.maxCameras} camera nodes</strong></span>
+                            </div>
+                            {plan.trialDays > 0 && (
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <Eye className="h-3.5 w-3.5 text-primary shrink-0" />
+                                <span>Trial Period: <strong className="text-foreground">{plan.trialDays} days</strong></span>
+                              </div>
+                            )}
+                          </div>
 
-                        <div className="mt-2 flex items-baseline gap-1">
-                          <span className="text-lg font-black text-foreground">
-                            ${isPlanFree ? 0 : plan.monthlyPrice}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground/80">
-                            {isPlanFree ? `/ ${plan.trialDays || 14} days` : '/ month'}
-                          </span>
+                          <div className="border-t border-border/60" />
+
+                          <div>
+                            <div className="text-[8px] font-bold text-muted-foreground uppercase font-mono mb-1.5 tracking-wider">
+                              Enabled AI Capabilities
+                            </div>
+                            <ul className="space-y-1.5">
+                              {plan.features?.map((feature, i) => (
+                                <li key={i} className="flex items-start gap-2 text-[10px] text-foreground/80">
+                                  <span className="text-primary mt-0.5 bg-primary/10 p-0.5 rounded shrink-0">
+                                    {getFeatureIcon(feature)}
+                                  </span>
+                                  <span className="line-clamp-1">{getFeatureLabel(feature)}</span>
+                                </li>
+                              ))}
+                              {(!plan.features || plan.features.length === 0) && (
+                                <li className="text-[10px] text-muted-foreground italic">No AI features enabled</li>
+                              )}
+                            </ul>
+                          </div>
                         </div>
                       </div>
                     );

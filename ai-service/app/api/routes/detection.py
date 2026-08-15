@@ -19,3 +19,21 @@ def get_detection_status():
         "device": device,
         "personConfidenceThreshold": settings.PERSON_CONFIDENCE
     }
+
+@router.get("/detection/performance")
+def get_detection_performance():
+    """
+    Exposes real-time adaptive inference performance telemetry for all active cameras.
+    """
+    from app.main import camera_manager
+    performance_list = []
+    
+    for key, runtime in camera_manager.runtimes.items():
+        if hasattr(runtime, "scheduler") and runtime.scheduler is not None:
+            performance_list.append(runtime.scheduler.state.to_dict())
+            
+    return {
+        "success": True,
+        "cameras": performance_list
+    }
+

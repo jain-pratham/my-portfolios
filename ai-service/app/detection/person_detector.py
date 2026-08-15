@@ -1,4 +1,5 @@
 import torch
+import threading
 from ultralytics import YOLO
 from app.config import settings
 from app.utils.logger import get_logger
@@ -7,32 +8,36 @@ logger = get_logger("Detection")
 
 class YOLOModelManager:
     """
-    Singleton manager to load and store the YOLO model exactly once
-    across the entire application lifecycle.
+    Registry manager to load and store YOLO model instances per camera stream,
+    ensuring ByteTrack and trackers are fully isolated.
     """
-    _model = None
+    _models = {}  # camera_key -> YOLO model instance
     _device = None
+    _lock = threading.Lock()
 
     @classmethod
-    def get_model(cls, model_path: str = None, device: str = None) -> YOLO:
+    def get_model(cls, camera_key: str = "default", model_path: str = None, device: str = None) -> YOLO:
         # Check if YOLO is a mock (used in unit tests) to prevent caching issues
         is_mock = "Mock" in type(YOLO).__name__ or "MagicMock" in type(YOLO).__name__
         
-        if cls._model is None or is_mock:
-            path = model_path or settings.YOLO_MODEL
-            dev = device or settings.AI_DEVICE
-            
-            if dev == "auto":
-                resolved_device = "cuda" if torch.cuda.is_available() else "cpu"
-            else:
-                resolved_device = dev
+        with cls._lock:
+            if camera_key not in cls._models or is_mock:
+                path = model_path or settings.YOLO_MODEL
+                dev = device or settings.AI_DEVICE
                 
-            logger.info(f"[System] Loading YOLO Model using weights: {path} on device: {resolved_device}")
-            cls._model = YOLO(path)
-            if not is_mock:
-                cls._model.to(resolved_device)
-            cls._device = resolved_device
-        return cls._model
+                if dev == "auto":
+                    resolved_device = "cuda" if torch.cuda.is_available() else "cpu"
+                else:
+                    resolved_device = dev
+                    
+                logger.info(f"[System] Loading independent YOLO Model instance for '{camera_key}' using weights: {path} on device: {resolved_device}")
+                model = YOLO(path)
+                if not is_mock:
+                    model.to(resolved_device)
+                cls._models[camera_key] = model
+                cls._device = resolved_device
+                
+            return cls._models[camera_key]
 
     @classmethod
     def get_device(cls) -> str:
@@ -44,12 +49,26 @@ class YOLOModelManager:
                 cls._device = dev
         return cls._device
 
+    @classmethod
+    def remove_model(cls, camera_key: str):
+        """
+        Memory safety helper to remove model reference when camera is unregistered.
+        """
+        with cls._lock:
+            if camera_key in cls._models:
+                del cls._models[camera_key]
+                logger.info(f"[System] Released YOLO Model reference for camera '{camera_key}'")
+
 class PersonDetector:
     """
-    Handles person detection and tracking using the singleton YOLO model.
+    Handles person detection and tracking using camera-isolated YOLO model instances
+    with serialized inference locking for GPU stability.
     """
-    def __init__(self, model_path: str = None, confidence_threshold: float = None, device: str = None):
-        self.model = YOLOModelManager.get_model(model_path, device)
+    _inference_lock = threading.Lock()
+
+    def __init__(self, camera_key: str = "default", model_path: str = None, confidence_threshold: float = None, device: str = None):
+        self.camera_key = camera_key
+        self.model = YOLOModelManager.get_model(camera_key, model_path, device)
         # Fallback confidence threshold
         self.confidence_threshold = confidence_threshold or settings.PERSON_CONFIDENCE
         self.person_class_id = 0
@@ -59,7 +78,8 @@ class PersonDetector:
         Runs inference on the provided frame using predict().
         Used for tests and non-tracking baseline validations.
         """
-        results = self.model.predict(source=frame, classes=[self.person_class_id], conf=self.confidence_threshold, verbose=False)
+        with PersonDetector._inference_lock:
+            results = self.model.predict(source=frame, classes=[self.person_class_id], conf=self.confidence_threshold, verbose=False)
         detections = []
 
         for result in results:
@@ -90,15 +110,16 @@ class PersonDetector:
         Returns a structured list of normalized track objects.
         """
         device = YOLOModelManager.get_device()
-        results = self.model.track(
-            source=frame,
-            persist=True,
-            classes=[self.person_class_id],
-            tracker="bytetrack.yaml",
-            conf=self.confidence_threshold,
-            device=device,
-            verbose=False
-        )
+        with PersonDetector._inference_lock:
+            results = self.model.track(
+                source=frame,
+                persist=True,
+                classes=[self.person_class_id],
+                tracker="bytetrack.yaml",
+                conf=self.confidence_threshold,
+                device=device,
+                verbose=False
+            )
 
         detections = []
         for result in results:
