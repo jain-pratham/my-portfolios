@@ -11,6 +11,20 @@ interface UserData {
   role: 'admin' | 'user' | 'demo';
 }
 
+interface DbPlan {
+  _id: string;
+  name: string;
+  description: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  maxCameras: number;
+  trialDays: number;
+  status: 'active' | 'inactive';
+  sortOrder: number;
+  isPopular: boolean;
+  features: string[];
+}
+
 export default function SignupStepsPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -22,6 +36,9 @@ export default function SignupStepsPage() {
   // Auth Session state
   const [user, setUser] = useState<UserData | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
+  // Plans list loaded from DB
+  const [plans, setPlans] = useState<DbPlan[]>([]);
 
   // Form Fields State
   const [formData, setFormData] = useState({
@@ -73,6 +90,18 @@ export default function SignupStepsPage() {
       const parsedUser = JSON.parse(storedUser) as UserData;
       setUser(parsedUser);
       setToken(storedToken);
+
+      // Fetch active plans first
+      fetch(`${API_URL}/api/plans?status=active`)
+        .then((res) => res.json())
+        .then((plansData) => {
+          if (plansData.success && plansData.data?.plans) {
+            // Sort by sortOrder
+            const sortedPlans = [...plansData.data.plans].sort((a, b) => a.sortOrder - b.sortOrder);
+            setPlans(sortedPlans);
+          }
+        })
+        .catch((err) => console.log('Error loading plans:', err));
 
       // Fetch customer profile to prefill
       fetch(`${API_URL}/api/customers/me`, {
@@ -207,6 +236,11 @@ export default function SignupStepsPage() {
     setStep((prev) => prev - 1);
   };
 
+  const selectedPlanObj = plans.find(p => p.name === formData.plan);
+  const isFreePlan = selectedPlanObj 
+    ? (selectedPlanObj.monthlyPrice === 0 && selectedPlanObj.yearlyPrice === 0) 
+    : (formData.plan === 'Demo Free');
+
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
@@ -216,7 +250,7 @@ export default function SignupStepsPage() {
     setIsSubmitting(true);
 
     // Validation for Step 4
-    if (formData.plan !== 'Demo Free') {
+    if (!isFreePlan) {
       // Paid plan card validations
       if (!formData.cardName.trim()) {
         newErrors.cardName = 'Cardholder name is required';
@@ -248,8 +282,8 @@ export default function SignupStepsPage() {
     setErrors({});
 
     try {
-      // 1. If user selected Demo Free, automatically register their first camera in Next.js backend database
-      if (formData.plan === 'Demo Free') {
+      // 1. If user selected a free/trial plan, automatically register their first camera in Next.js backend database
+      if (isFreePlan) {
         try {
           await fetch('/api/cameras', {
             method: 'POST',
@@ -283,7 +317,7 @@ export default function SignupStepsPage() {
           country: formData.country.trim(),
           pincode: formData.pincode.trim(),
           plan: formData.plan,
-          cameras: formData.plan === 'Demo Free' ? Number(formData.camerasCount) : getCamerasCountForPlan(formData.plan),
+          cameras: isFreePlan ? Number(formData.camerasCount) : (selectedPlanObj ? selectedPlanObj.maxCameras : 5),
           status: 'Active', // Setup is complete!
         }),
       });
@@ -299,15 +333,6 @@ export default function SignupStepsPage() {
       setErrorMessage('Network connection error. Please ensure the backend is running.');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const getCamerasCountForPlan = (planName: string) => {
-    switch (planName) {
-      case 'Standard AI': return 8;
-      case 'Enterprise Pro': return 16;
-      case 'Enterprise Max': return 32;
-      default: return 5;
     }
   };
 
@@ -327,7 +352,7 @@ export default function SignupStepsPage() {
     { num: 1, label: 'Account Info' },
     { num: 2, label: 'Business Address' },
     { num: 3, label: 'Choose Plan' },
-    { num: 4, label: formData.plan === 'Demo Free' ? 'Camera Setup' : 'Payment' },
+    { num: 4, label: isFreePlan ? 'Camera Setup' : 'Payment' },
     { num: 5, label: 'Complete' },
   ];
 
@@ -632,82 +657,60 @@ export default function SignupStepsPage() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                
-                {/* Demo Plan Card */}
-                <div 
-                  onClick={() => setFormData({ ...formData, plan: 'Demo Free' })}
-                  className={`p-3 rounded-lg border transition-all cursor-pointer relative ${
-                    formData.plan === 'Demo Free'
-                      ? 'border-emerald-500 bg-emerald-500/5 ring-2 ring-emerald-500/20'
-                      : 'border-border bg-card hover:border-primary/50'
-                  }`}
-                >
-                  <div className="absolute top-2 right-2 bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
-                    Recommended
+                {plans.length === 0 ? (
+                  <div className="col-span-2 text-center py-8 text-xs text-muted-foreground">
+                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    Loading available plans...
                   </div>
-                  <div className="text-[9px] font-mono text-emerald-400 font-bold mb-0.5">PROMO TRIAL</div>
-                  <h3 className="text-sm font-black text-foreground">Demo Free</h3>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">1-Day trial to inspect safety tools. Supports up to 5 cameras. Zero obligation.</p>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-lg font-black text-foreground">$0</span>
-                    <span className="text-[9px] text-muted-foreground/80">/ 1 day</span>
-                  </div>
-                </div>
+                ) : (
+                  plans.map((plan) => {
+                    const isPlanFree = plan.monthlyPrice === 0 && plan.yearlyPrice === 0;
+                    const isSelected = formData.plan === plan.name;
 
-                {/* Standard Card */}
-                <div 
-                  onClick={() => setFormData({ ...formData, plan: 'Standard AI' })}
-                  className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                    formData.plan === 'Standard AI'
-                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                      : 'border-border bg-card hover:border-primary/50'
-                  }`}
-                >
-                  <div className="text-[9px] font-mono text-primary font-bold mb-0.5">POPULAR</div>
-                  <h3 className="text-sm font-black text-foreground">Standard AI</h3>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">Perfect for retail and small warehouses. Supports up to 8 cameras.</p>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-lg font-black text-foreground">$49</span>
-                    <span className="text-[9px] text-muted-foreground/80">/ month</span>
-                  </div>
-                </div>
+                    return (
+                      <div 
+                        key={plan._id}
+                        onClick={() => setFormData({ ...formData, plan: plan.name })}
+                        className={`p-3 rounded-lg border transition-all cursor-pointer relative ${
+                          isSelected
+                            ? isPlanFree
+                              ? 'border-emerald-500 bg-emerald-500/5 ring-2 ring-emerald-500/20'
+                              : 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                            : 'border-border bg-card hover:border-primary/50'
+                        }`}
+                      >
+                        {plan.isPopular && (
+                          <div className="absolute top-2 right-2 bg-primary/15 border border-primary/20 text-primary text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                            Popular
+                          </div>
+                        )}
+                        {isPlanFree && !plan.isPopular && (
+                          <div className="absolute top-2 right-2 bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                            Recommended
+                          </div>
+                        )}
 
-                {/* Pro Card */}
-                <div 
-                  onClick={() => setFormData({ ...formData, plan: 'Enterprise Pro' })}
-                  className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                    formData.plan === 'Enterprise Pro'
-                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                      : 'border-border bg-card hover:border-primary/50'
-                  }`}
-                >
-                  <div className="text-[9px] font-mono text-primary font-bold mb-0.5">POWERFUL</div>
-                  <h3 className="text-sm font-black text-foreground">Enterprise Pro</h3>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">Deep compliance tracking. Safe inspections for up to 16 cameras.</p>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-lg font-black text-foreground">$99</span>
-                    <span className="text-[9px] text-muted-foreground/80">/ month</span>
-                  </div>
-                </div>
+                        <div className={`text-[9px] font-mono font-bold mb-0.5 ${isPlanFree ? 'text-emerald-400' : 'text-primary'}`}>
+                          {isPlanFree ? 'PROMO TRIAL' : 'SUBSCRIPTION'}
+                        </div>
 
-                {/* Max Card */}
-                <div 
-                  onClick={() => setFormData({ ...formData, plan: 'Enterprise Max' })}
-                  className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                    formData.plan === 'Enterprise Max'
-                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                      : 'border-border bg-card hover:border-primary/50'
-                  }`}
-                >
-                  <div className="text-[9px] font-mono text-primary font-bold mb-0.5">UNLIMITED</div>
-                  <h3 className="text-sm font-black text-foreground">Enterprise Max</h3>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">Maximum video streams, 24/7 dedicated compute. Up to 32 cameras.</p>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-lg font-black text-foreground">$199</span>
-                    <span className="text-[9px] text-muted-foreground/80">/ month</span>
-                  </div>
-                </div>
+                        <h3 className="text-sm font-black text-foreground">{plan.name}</h3>
+                        <p className="text-[9px] text-muted-foreground mt-0.5 leading-relaxed">
+                          {plan.description} Supports up to {plan.maxCameras} camera{plan.maxCameras > 1 ? 's' : ''}.
+                        </p>
 
+                        <div className="mt-2 flex items-baseline gap-1">
+                          <span className="text-lg font-black text-foreground">
+                            ${isPlanFree ? 0 : plan.monthlyPrice}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/80">
+                            {isPlanFree ? `/ ${plan.trialDays || 14} days` : '/ month'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
@@ -717,7 +720,7 @@ export default function SignupStepsPage() {
             <div className="space-y-3">
               
               {/* CONDITIONAL SUB-WIZARD A: CAMERA SETUP (DEMO PLAN) */}
-              {formData.plan === 'Demo Free' ? (
+              {isFreePlan ? (
                 <div className="space-y-3">
                   <h2 className="text-xs md:text-sm font-bold text-foreground flex items-center gap-2">
                     <span className="w-1 h-3 bg-emerald-500 rounded-full"></span>
@@ -953,7 +956,7 @@ export default function SignupStepsPage() {
                 onClick={handleFinalSubmit}
                 disabled={isSubmitting}
                 className={`flex-1 py-2 rounded-lg text-[#FAF6EE] text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 ${
-                  formData.plan === 'Demo Free'
+                  isFreePlan
                     ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/10'
                     : 'bg-primary hover:bg-brand-gold-light shadow-primary/10'
                 }`}

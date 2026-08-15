@@ -73,6 +73,18 @@ app.get("/api/zones/:id", protect, getZoneById);
 app.patch("/api/zones/:id", protect, updateZone);
 app.delete("/api/zones/:id", protect, deleteZone);
 
+// Import plan controllers
+import { getAllPlans, getPlanById, createPlan, updatePlan, toggleStatus, deletePlan, getPlanStats } from "./controllers/planController";
+
+// Subscription Plan Routes
+app.get("/api/plans", getAllPlans);
+app.get("/api/plans/stats", protect, isAdmin, getPlanStats);
+app.get("/api/plans/:id", protect, getPlanById);
+app.post("/api/plans", protect, isAdmin, createPlan);
+app.patch("/api/plans/:id", protect, isAdmin, updatePlan);
+app.patch("/api/plans/:id/toggle-status", protect, isAdmin, toggleStatus);
+app.delete("/api/plans/:id", protect, isAdmin, deletePlan);
+
 // Serve Static Uploads (for CCTV snapshots)
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -159,6 +171,62 @@ app.post("/api/seed", async (req: Request, res: Response) => {
 
     await Lead.insertMany(leads);
 
+    // Seed plans if empty
+    const Plan = require("./models/Plan").default;
+    const planCount = await Plan.countDocuments();
+    if (planCount === 0) {
+      await Plan.insertMany([
+        {
+          name: "Demo Free",
+          description: "Explore CoreWatch basic features. Perfect for small evaluations.",
+          monthlyPrice: 0,
+          yearlyPrice: 0,
+          maxCameras: 1,
+          trialDays: 14,
+          status: "active",
+          sortOrder: 0,
+          isPopular: false,
+          features: ["intrusion_detection", "camera_offline"],
+        },
+        {
+          name: "Standard AI",
+          description: "Essential real-time alerts for growing commercial spaces.",
+          monthlyPrice: 499,
+          yearlyPrice: 4990,
+          maxCameras: 10,
+          trialDays: 0,
+          status: "active",
+          sortOrder: 1,
+          isPopular: false,
+          features: ["intrusion_detection", "camera_offline", "whatsapp_alerts"],
+        },
+        {
+          name: "Enterprise Pro",
+          description: "Advanced multi-site safety and loitering compliance package.",
+          monthlyPrice: 1299,
+          yearlyPrice: 12990,
+          maxCameras: 30,
+          trialDays: 0,
+          status: "active",
+          sortOrder: 2,
+          isPopular: true,
+          features: ["intrusion_detection", "loitering_detection", "camera_offline", "whatsapp_alerts", "fire_smoke"],
+        },
+        {
+          name: "Enterprise Max",
+          description: "Tailored camera analytics and dedicated server capacities.",
+          monthlyPrice: 2499,
+          yearlyPrice: 24990,
+          maxCameras: 100,
+          trialDays: 0,
+          status: "active",
+          sortOrder: 3,
+          isPopular: false,
+          features: ["intrusion_detection", "loitering_detection", "camera_offline", "whatsapp_alerts", "fire_smoke", "cash_counter"],
+        }
+      ]);
+    }
+
     res.status(201).json({
       success: true,
       message: "Seeding complete!",
@@ -178,5 +246,5 @@ app.post("/api/seed", async (req: Request, res: Response) => {
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`); // reload
 });

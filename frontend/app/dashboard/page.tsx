@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar, { NavItem } from '../../components/layout/Sidebar';
-import { LayoutDashboard, Users, UserPlus, Settings, CreditCard, Video, History, UserCircle, Bell, Eye, ArrowUpCircle, Map } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, Settings, CreditCard, Video, History, UserCircle, Bell, Eye, ArrowUpCircle, Map, Info } from 'lucide-react';
 
 interface UserData {
   _id: string;
@@ -40,7 +40,14 @@ const NAVIGATION_ITEMS: NavItem[] = [
     { label: 'All Customers', href: '/dashboard?tab=all_customers', icon: Users },
     { label: 'Add Customer', href: '/dashboard?tab=add_customer', icon: UserPlus }
   ]},
-  { label: 'Subscription', href: '/dashboard?tab=subscription', icon: CreditCard, roles: ['admin'] },
+  { label: 'Billing', href: '/dashboard?tab=billing_plans', icon: CreditCard, roles: ['admin'], children: [
+    { label: 'Plans', href: '/dashboard?tab=billing_plans', icon: CreditCard },
+    { label: 'Active Subscribers', href: '/dashboard?tab=active_subscribers', icon: Users },
+    { label: 'Invoice', href: '/dashboard?tab=billing_invoices', icon: History }
+  ]},
+  { label: 'Notification', href: '/dashboard?tab=admin_notifications', icon: Bell, roles: ['admin'] },
+  { label: 'My Account', href: '/dashboard?tab=admin_profile', icon: UserCircle, roles: ['admin'] },
+  { label: 'Help & Guidelines', href: '/dashboard?tab=help_guidelines', icon: Info, roles: ['admin'] },
   { label: 'Live Camera', href: '/dashboard?tab=live_camera', icon: Video, roles: ['user'] },
   { label: 'Security Zones', href: '/dashboard?tab=zones', icon: Map, roles: ['user'], children: [
     { label: 'Configure Zones', href: '/dashboard?tab=zones', icon: Map }
@@ -56,6 +63,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
 
 import { Suspense } from 'react';
 import ZoneManagementView from '../../components/zones/ZoneManagementView';
+import PlansManagementView from '../../components/billing/PlansManagementView';
 
 function DashboardContent() {
   const router = useRouter();
@@ -514,7 +522,19 @@ function DashboardContent() {
         ]
       },
       { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
-      { id: 'subscription', label: 'Subscription', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+      {
+        id: 'billing',
+        label: 'Billing',
+        icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+        subItems: [
+          { id: 'billing_plans', label: 'Plans', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+          { id: 'active_subscribers', label: 'Active Subscribers', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+          { id: 'billing_invoices', label: 'Invoice', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }
+        ]
+      },
+      { id: 'admin_notifications', label: 'Notification', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
+      { id: 'admin_profile', label: 'My Account', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+      { id: 'help_guidelines', label: 'Help & Guidelines', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
     ],
     user: [
       { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -1075,23 +1095,270 @@ function DashboardContent() {
                 </div>
               )}
 
-              {activeTab === 'subscription' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-6 rounded-2xl border border-border bg-card space-y-4 shadow-sm">
-                    <div className="text-xs font-mono uppercase text-muted-foreground">Standard Tier</div>
-                    <div className="text-2xl font-black text-foreground">$499 <span className="text-xs text-muted-foreground font-normal">/ mo</span></div>
-                    <p className="text-xs text-muted-foreground">Up to 10 Cameras, basic helmet detection.</p>
+              {activeTab === 'billing_plans' && (
+                <PlansManagementView apiUrl={API_URL} user={user} />
+              )}
+
+              {activeTab === 'active_subscribers' && (
+                <div className="space-y-6">
+                  {/* Metrics Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">Active Subscribers</div>
+                      <div className="text-3xl font-black text-foreground">
+                        {customers.filter(c => c.status === 'Active').length}
+                      </div>
+                      <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Live billing active</div>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">Monthly Recurring Revenue</div>
+                      <div className="text-3xl font-black text-brand-blue dark:text-brand-light-blue">
+                        ${customers.filter(c => c.status === 'Active').reduce((acc, curr) => {
+                          const val = curr.plan === 'Standard Tier' ? 499 : 1299;
+                          return acc + val;
+                        }, 0).toLocaleString()}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">Based on active plans</div>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">Total Camera Licenses</div>
+                      <div className="text-3xl font-black text-foreground">
+                        {customers.filter(c => c.status === 'Active').reduce((acc, curr) => acc + (curr.cameras || 0), 0)}
+                      </div>
+                      <div className="text-[11px] text-brand-blue dark:text-brand-light-blue font-semibold">Active licenses</div>
+                    </div>
                   </div>
-                  <div className="p-6 rounded-2xl border border-brand-blue bg-brand-blue/10 space-y-4 relative shadow-md">
-                    <span className="absolute -top-3 right-4 px-2 py-0.5 rounded text-[10px] font-bold bg-brand-blue text-white">POPULAR</span>
-                    <div className="text-xs font-mono uppercase text-brand-blue dark:text-brand-light-blue font-bold">Enterprise Pro</div>
-                    <div className="text-2xl font-black text-foreground">$1,299 <span className="text-xs text-muted-foreground font-normal">/ mo</span></div>
-                    <p className="text-xs text-muted-foreground">Up to 30 Cameras, custom AI rules + WhatsApp alerts.</p>
+
+                  <div className="border border-border bg-card rounded-2xl p-6 shadow-sm space-y-4">
+                    <div>
+                      <h2 className="text-base font-bold text-foreground">Active Subscription Customers</h2>
+                      <p className="text-xs text-muted-foreground">List of clients with active licenses and billing statuses.</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b border-border text-muted-foreground uppercase font-mono text-[10px] bg-muted/50">
+                          <tr>
+                            <th className="py-3 px-4">Client ID</th>
+                            <th className="py-3 px-4">Name & Email</th>
+                            <th className="py-3 px-4">Company</th>
+                            <th className="py-3 px-4">Plan Tier</th>
+                            <th className="py-3 px-4">Cameras</th>
+                            <th className="py-3 px-4">Monthly Cost</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60 font-medium">
+                          {customers.filter(c => c.status === 'Active').length > 0 ? (
+                            customers.filter(c => c.status === 'Active').map((c) => (
+                              <tr key={c.id} className="hover:bg-muted/30 transition-colors">
+                                <td className="py-3 px-4 font-mono font-bold text-brand-blue dark:text-brand-light-blue">{c.id}</td>
+                                <td className="py-3 px-4 font-sans">
+                                  <div className="font-bold text-foreground">{c.name}</div>
+                                  <div className="text-[10px] text-muted-foreground">{c.email}</div>
+                                </td>
+                                <td className="py-3 px-4 text-foreground/80 font-sans">{c.company}</td>
+                                <td className="py-3 px-4 text-foreground/80 font-sans">{c.plan}</td>
+                                <td className="py-3 px-4 font-bold text-foreground/90">{c.cameras} Nodes</td>
+                                <td className="py-3 px-4 text-foreground/80 font-mono">
+                                  {c.plan === 'Standard Tier' ? '$499/mo' : '$1,299/mo'}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6} className="py-6 text-center text-muted-foreground font-sans">
+                                No active subscribers found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div className="p-6 rounded-2xl border border-border bg-card space-y-4 shadow-sm">
-                    <div className="text-xs font-mono uppercase text-muted-foreground">Custom Max</div>
-                    <div className="text-2xl font-black text-foreground">Contact Us</div>
-                    <p className="text-xs text-muted-foreground">Unlimited camera nodes & dedicated GPU server cluster.</p>
+                </div>
+              )}
+
+              {activeTab === 'billing_invoices' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center pb-4 border-b border-border">
+                    <div>
+                      <h2 className="text-xl font-extrabold text-foreground font-sans">Invoices & Statements</h2>
+                      <p className="text-xs text-muted-foreground">View and manage invoices for enterprise customers.</p>
+                    </div>
+                  </div>
+
+                  <div className="border border-border bg-card rounded-2xl p-6 shadow-sm space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b border-border text-muted-foreground uppercase font-mono text-[10px] bg-muted/50">
+                          <tr>
+                            <th className="py-3 px-4">Invoice ID</th>
+                            <th className="py-3 px-4">Customer</th>
+                            <th className="py-3 px-4">Plan Tier</th>
+                            <th className="py-3 px-4">Billing Date</th>
+                            <th className="py-3 px-4">Amount</th>
+                            <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60 font-medium">
+                          {customers.length > 0 ? (
+                            customers.map((c, index) => {
+                              const amount = c.plan === 'Standard Tier' ? '$499.00' : '$1,299.00';
+                              const invoiceId = `INV-2026-${(1000 + index).toString().substring(1)}`;
+                              return (
+                                <tr key={invoiceId} className="hover:bg-muted/30 transition-colors">
+                                  <td className="py-3 px-4 font-mono font-bold text-foreground">{invoiceId}</td>
+                                  <td className="py-3 px-4 font-sans">
+                                    <div className="font-bold text-foreground">{c.company || 'Private Client'}</div>
+                                    <div className="text-[10px] text-muted-foreground">{c.name}</div>
+                                  </td>
+                                  <td className="py-3 px-4 text-foreground/80 font-sans">{c.plan}</td>
+                                  <td className="py-3 px-4 text-foreground/80 font-mono">Aug 01, 2026</td>
+                                  <td className="py-3 px-4 font-bold text-foreground/90 font-mono">{amount}</td>
+                                  <td className="py-3 px-4">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                      c.status === 'Active' ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' :
+                                      c.status === 'Suspended' ? 'bg-red-500/20 text-red-700 dark:text-red-400' :
+                                      'bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                                    }`}>
+                                      {c.status === 'Active' ? 'Paid' : c.status === 'Suspended' ? 'Overdue' : 'Pending'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <button 
+                                      onClick={() => alert(`Downloading PDF for ${invoiceId}`)}
+                                      className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-border hover:bg-muted text-foreground transition-all cursor-pointer font-sans"
+                                    >
+                                      Download
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan={7} className="py-6 text-center text-muted-foreground font-sans">
+                                No invoices found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'admin_notifications' && (
+                <div className="max-w-2xl border border-border bg-card rounded-2xl p-6 space-y-6 shadow-sm">
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground">Admin System Notifications</h2>
+                    <p className="text-xs text-muted-foreground font-sans">Recent alerts regarding client signups, system status, and system configurations.</p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-xl border border-border bg-background/50 text-xs flex gap-3 items-start">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 font-bold font-sans">✓</div>
+                      <div>
+                        <div className="font-bold text-foreground font-sans">Successful Database Backup</div>
+                        <div className="text-muted-foreground mt-0.5 font-sans">CoreWatch automated system backup completed successfully. All logs replicated.</div>
+                        <div className="text-[10px] text-muted-foreground mt-1 font-mono">10 minutes ago</div>
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border bg-background/50 text-xs flex gap-3 items-start">
+                      <div className="w-8 h-8 rounded-lg bg-brand-blue/10 text-brand-blue flex items-center justify-center shrink-0 font-bold font-sans">👤</div>
+                      <div>
+                        <div className="font-bold text-foreground font-sans">New Client Registration Request</div>
+                        <div className="text-muted-foreground mt-0.5 font-sans">Enterprise subscriber registered: "Adani Logistics Ltd" with 15 camera licenses.</div>
+                        <div className="text-[10px] text-muted-foreground mt-1 font-mono">2 hours ago</div>
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border bg-background/50 text-xs flex gap-3 items-start">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-bold font-sans">⚠</div>
+                      <div>
+                        <div className="font-bold text-foreground font-sans">AI Node High GPU Thermal Warning</div>
+                        <div className="text-muted-foreground mt-0.5 font-sans">Primary GPU cluster node reached 82°C. Air ventilation cooling triggered automatically.</div>
+                        <div className="text-[10px] text-muted-foreground mt-1 font-mono">4 hours ago</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'admin_profile' && (
+                <div className="max-w-xl border border-border bg-card rounded-2xl p-6 space-y-6 shadow-sm">
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground">Admin Account Profile</h2>
+                    <p className="text-xs text-muted-foreground font-sans">Manage your credentials, admin roles, and multi-tenant privileges.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-xs font-sans">
+                    <div className="p-4 rounded-xl bg-background/40 border border-border">
+                      <span className="text-muted-foreground block mb-0.5">FULL NAME</span>
+                      <span className="font-bold text-sm text-foreground">{user?.name}</span>
+                    </div>
+                    <div className="p-4 rounded-xl bg-background/40 border border-border">
+                      <span className="text-muted-foreground block mb-0.5">EMAIL ADDRESS</span>
+                      <span className="font-bold text-sm text-foreground">{user?.email}</span>
+                    </div>
+                    <div className="p-4 rounded-xl bg-background/40 border border-border">
+                      <span className="text-muted-foreground block mb-0.5">ACCOUNT ROLE</span>
+                      <span className="font-bold text-sm text-red-500 uppercase">{user?.role}</span>
+                    </div>
+                    <div className="p-4 rounded-xl bg-background/40 border border-border">
+                      <span className="text-muted-foreground block mb-0.5">TENANT IDENTIFIER</span>
+                      <span className="font-bold text-sm text-foreground">COREWATCH-ROOT-TENANT</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'help_guidelines' && (
+                <div className="max-w-3xl border border-border bg-card rounded-2xl p-6 space-y-6 shadow-sm">
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground font-sans">System Guidelines & Support Manual</h2>
+                    <p className="text-xs text-muted-foreground">Technical guidelines for managing and operating the CoreWatch safety AI system.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <details className="group border border-border rounded-xl p-4 [&_summary::-webkit-details-marker]:hidden">
+                      <summary className="flex items-center justify-between text-xs font-bold text-foreground cursor-pointer font-sans">
+                        <span>How do I configure the AI Service stream to point to a new camera?</span>
+                        <span className="transition group-open:rotate-180">▼</span>
+                      </summary>
+                      <p className="mt-3 text-xs text-muted-foreground leading-relaxed font-sans">
+                        Administrators must first provision a unique Location and camera key in the **Settings** tab. 
+                        Once created, copy the generated Access Key and place it inside your AI Service container or system environment configuration:
+                        <br/>
+                        <code className="block mt-2 p-2 bg-background border border-border rounded font-mono text-[10px] text-brand-gold-light">
+                          CAMERA_KEY=CAM-XXXXXX
+                        </code>
+                      </p>
+                    </details>
+
+                    <details className="group border border-border rounded-xl p-4 [&_summary::-webkit-details-marker]:hidden">
+                      <summary className="flex items-center justify-between text-xs font-bold text-foreground cursor-pointer font-sans">
+                        <span>How can I provision a new commercial client account?</span>
+                        <span className="transition group-open:rotate-180">▼</span>
+                      </summary>
+                      <p className="mt-3 text-xs text-muted-foreground leading-relaxed font-sans">
+                        Navigate to the **Customers** menu option and select **Add Customer**. Provide their company details, 
+                        desired Plan Tier (Standard vs Enterprise Pro), and select the number of camera license quotas allocated to them.
+                        Upon submission, an invitation setup link will be automatically generated.
+                      </p>
+                    </details>
+
+                    <details className="group border border-border rounded-xl p-4 [&_summary::-webkit-details-marker]:hidden">
+                      <summary className="flex items-center justify-between text-xs font-bold text-foreground cursor-pointer font-sans">
+                        <span>What do the client statuses mean?</span>
+                        <span className="transition group-open:rotate-180">▼</span>
+                      </summary>
+                      <p className="mt-3 text-xs text-muted-foreground leading-relaxed font-sans">
+                        • <strong className="text-emerald-500 font-sans">Active:</strong> Client has verified their account, has positive billing status, and is actively streaming live CCTV nodes.
+                        <br/>
+                        • <strong className="text-amber-500 font-sans">Pending:</strong> Client has been provisioned, but has not completed their password/verification setup.
+                        <br/>
+                        • <strong className="text-red-500 font-sans">Suspended:</strong> Client account has been disabled manually or due to an overdue unpaid invoice. Streams are blocked.
+                      </p>
+                    </details>
                   </div>
                 </div>
               )}

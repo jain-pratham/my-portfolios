@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "../models/User";
+import Plan from "../models/Plan";
 
 let mongod: MongoMemoryServer | null = null;
 
@@ -54,6 +55,70 @@ const seedDefaultUsers = async (): Promise<void> => {
   }
 };
 
+const seedDefaultPlans = async (): Promise<void> => {
+  try {
+    // Clean up any soft-deleted plans from before by deleting them permanently from MongoDB
+    await Plan.deleteMany({ isDeleted: true });
+
+    const planCount = await Plan.countDocuments();
+    if (planCount === 0) {
+      await Plan.insertMany([
+        {
+          name: "Demo Free",
+          description: "Explore CoreWatch basic features. Perfect for small evaluations.",
+          monthlyPrice: 0,
+          yearlyPrice: 0,
+          maxCameras: 1,
+          trialDays: 14,
+          status: "active",
+          sortOrder: 0,
+          isPopular: false,
+          features: ["intrusion_detection", "camera_offline"],
+        },
+        {
+          name: "Standard AI",
+          description: "Essential real-time alerts for growing commercial spaces.",
+          monthlyPrice: 499,
+          yearlyPrice: 4990,
+          maxCameras: 10,
+          trialDays: 0,
+          status: "active",
+          sortOrder: 1,
+          isPopular: false,
+          features: ["intrusion_detection", "camera_offline", "whatsapp_alerts"],
+        },
+        {
+          name: "Enterprise Pro",
+          description: "Advanced multi-site safety and loitering compliance package.",
+          monthlyPrice: 1299,
+          yearlyPrice: 12990,
+          maxCameras: 30,
+          trialDays: 0,
+          status: "active",
+          sortOrder: 2,
+          isPopular: true,
+          features: ["intrusion_detection", "loitering_detection", "camera_offline", "whatsapp_alerts", "fire_smoke"],
+        },
+        {
+          name: "Enterprise Max",
+          description: "Tailored camera analytics and dedicated server capacities.",
+          monthlyPrice: 2499,
+          yearlyPrice: 24990,
+          maxCameras: 100,
+          trialDays: 0,
+          status: "active",
+          sortOrder: 3,
+          isPopular: false,
+          features: ["intrusion_detection", "loitering_detection", "camera_offline", "whatsapp_alerts", "fire_smoke", "cash_counter"],
+        }
+      ]);
+      console.log("Default Subscription Plans seeded successfully!");
+    }
+  } catch (error) {
+    console.error("Error seeding default subscription plans:", error);
+  }
+};
+
 export const connectDB = async (): Promise<void> => {
   try {
     const connStr = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/corewatch";
@@ -66,6 +131,7 @@ export const connectDB = async (): Promise<void> => {
     });
     console.log(`MongoDB Connected: ${mongoose.connection.host}`);
     await seedDefaultUsers();
+    await seedDefaultPlans();
   } catch (error) {
     console.warn(`MongoDB Connection failed: ${error instanceof Error ? error.message : error}`);
     console.log("Spinning up In-Memory MongoDB Server fallback on port 27017...");
@@ -84,6 +150,7 @@ export const connectDB = async (): Promise<void> => {
       await mongoose.connect(uri);
       console.log("MongoDB Connected: (In-Memory Database on port 27017)");
       await seedDefaultUsers();
+      await seedDefaultPlans();
     } catch (err) {
       console.warn(`Failed to start In-Memory MongoDB on port 27017: ${err instanceof Error ? err.message : err}`);
       console.log("Retrying In-Memory MongoDB Server on a random port...");
@@ -98,6 +165,7 @@ export const connectDB = async (): Promise<void> => {
         await mongoose.connect(uri);
         console.log("MongoDB Connected: (In-Memory Database on random port)");
         await seedDefaultUsers();
+        await seedDefaultPlans();
       } catch (randomErr) {
         console.error(`In-Memory MongoDB failed to start: ${randomErr instanceof Error ? randomErr.message : randomErr}`);
         process.exit(1);
