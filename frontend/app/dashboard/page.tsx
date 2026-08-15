@@ -40,16 +40,18 @@ const NAVIGATION_ITEMS: NavItem[] = [
     { label: 'All Customers', href: '/dashboard?tab=all_customers', icon: Users },
     { label: 'Add Customer', href: '/dashboard?tab=add_customer', icon: UserPlus }
   ]},
-  { label: 'Settings', href: '/dashboard?tab=settings', icon: Settings, roles: ['admin', 'user'] },
   { label: 'Subscription', href: '/dashboard?tab=subscription', icon: CreditCard, roles: ['admin'] },
   { label: 'Live Camera', href: '/dashboard?tab=live_camera', icon: Video, roles: ['user'] },
-  { label: 'Security Zones', href: '/dashboard?tab=zones', icon: Map, roles: ['user'] },
+  { label: 'Security Zones', href: '/dashboard?tab=zones', icon: Map, roles: ['user'], children: [
+    { label: 'Configure Zones', href: '/dashboard?tab=zones', icon: Map }
+  ]},
   { label: 'Subscription Detail', href: '/dashboard?tab=subscription_detail', icon: CreditCard, roles: ['user'] },
   { label: 'Event History', href: '/dashboard?tab=event_history', icon: History, roles: ['user'] },
   { label: 'Profile', href: '/dashboard?tab=profile', icon: UserCircle, roles: ['user'] },
   { label: 'Notification', href: '/dashboard?tab=notification', icon: Bell, roles: ['user'] },
   { label: 'Demo Overview', href: '/dashboard?tab=demo_overview', icon: Eye, roles: ['demo'] },
   { label: 'Upgrade Account', href: '/dashboard?tab=upgrade_account', icon: ArrowUpCircle, roles: ['demo'] },
+  { label: 'Settings', href: '/dashboard?tab=settings', icon: Settings, roles: ['admin', 'user'] },
 ];
 
 import { Suspense } from 'react';
@@ -1186,43 +1188,68 @@ function DashboardContent() {
               )}
 
               {activeTab === 'live_camera' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h2 className="text-lg font-bold text-foreground">Live CCTV Inspection Feeds</h2>
-                      <p className="text-xs text-muted-foreground">Real-time video analytics with automated bounding boxes.</p>
+                      <h2 className="text-xl font-black tracking-tight text-foreground">Multi-Camera Analytics Grid</h2>
+                      <p className="text-xs text-muted-foreground">Monitoring all connected camera feeds simultaneously with real-time AI analytics.</p>
                     </div>
-                    <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 font-mono text-xs font-bold flex items-center gap-1.5 animate-pulse">
-                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                      LIVE FEED
-                    </span>
+                    {cameras.length > 0 && (
+                      <span className="px-3.5 py-1.5 rounded-full bg-red-500/10 text-red-500 font-mono text-xs font-bold flex items-center gap-2 border border-red-500/20 animate-pulse">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.7)] animate-ping"></span>
+                        {cameras.length} FEEDS ACTIVE
+                      </span>
+                    )}
                   </div>
 
-                  <div className="aspect-video w-full max-w-4xl mx-auto bg-background rounded-lg border border-border overflow-hidden relative flex items-center justify-around p-8 shadow-2xl">
-                    <div className="absolute top-4 left-4 font-mono text-xs text-[#FAF6EE]/80 bg-black/40 px-3 py-1 rounded border border-border">
-                      CAM-03 LOGISTICS DOCK · 1080P @ 30FPS
-                    </div>
+                  {cameras.length > 0 ? (
+                    <div className={`grid grid-cols-1 ${cameras.length > 1 ? 'md:grid-cols-2' : 'max-w-4xl mx-auto'} gap-6`}>
+                      {cameras.map((camera) => (
+                        <div 
+                          key={camera._id} 
+                          className="relative aspect-video w-full bg-[#020415] rounded-2xl border border-border overflow-hidden shadow-2xl group select-none hover:border-brand-blue/40 transition-all duration-300"
+                        >
+                          {/* Grid overlay & scanlines */}
+                          <div className="absolute inset-0 pointer-events-none z-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-35"></div>
+                          <div className="absolute inset-0 pointer-events-none z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]"></div>
+                          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(120,93,50,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(120,93,50,0.03)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
 
-                    <div className="border-2 border-cyan-400 bg-cyan-500/10 p-4 rounded-xl text-center text-xs font-mono">
-                      <div className="bg-cyan-400 text-black text-[10px] px-2 py-0.5 font-bold rounded mb-2">
-                        HELMET: OK (98%)
-                      </div>
-                      <svg className="w-16 h-16 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      <span className="text-slate-300">Staff #012</span>
-                    </div>
+                          {/* HUD Metadata Overlay */}
+                          <div className="absolute top-4 left-4 font-mono text-[9px] text-zinc-400 bg-[#0A0B0E]/85 border border-[#16171D] px-2.5 py-1.5 rounded-lg z-20 space-y-0.5 shadow-lg">
+                            <div className="flex items-center gap-1.5 font-bold text-zinc-100">
+                              <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
+                              <span>{camera.locationName.toUpperCase()} ({camera.cameraKey})</span>
+                            </div>
+                            <div>1920 × 1080 @ 10FPS · H.264 MJPEG</div>
+                            <div>AI OVERLAY ACTIVE</div>
+                          </div>
 
-                    <div className="border-2 border-red-500 bg-red-500/15 p-4 rounded-xl text-center text-xs font-mono animate-pulse">
-                      <div className="bg-red-600 text-white text-[10px] px-2 py-0.5 font-bold rounded mb-2 animate-bounce">
-                        NO HELMET DETECTED!
-                      </div>
-                      <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <span className="text-red-300">Staff #044</span>
+                          {/* MJPEG Stream Image */}
+                          <img 
+                            src={`http://localhost:8000/api/camera/stream/${camera.cameraKey}`}
+                            alt={`CCTV Stream - ${camera.locationName}`}
+                            className="w-full h-full object-contain relative z-0"
+                            onError={(e) => {
+                              // Fallback to static mock image if local server is down
+                              (e.target as HTMLImageElement).src = "/camera_feed_mock.jpg";
+                            }}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="p-8 rounded-2xl border border-dashed border-border bg-card/50 text-center space-y-4 max-w-lg mx-auto shadow-md">
+                      <div className="w-12 h-12 rounded-full bg-brand-blue/15 text-brand-blue flex items-center justify-center mx-auto">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-bold text-foreground">No Cameras Configured</h3>
+                        <p className="text-xs text-muted-foreground">You need to configure your camera key first to access the live video stream.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

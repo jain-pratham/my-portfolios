@@ -1,2 +1,6 @@
-# app/safety/smoke_detector.py
-# Stub for custom YOLO smoke classification or segmentation models
+def detect_smoke(frame) -> list:
+    """
+    Placeholder interface for future custom-trained smoke detection model.
+    Currently returns an empty list (no smoke detected).
+    """
+    return []

@@ -1,2 +1,6 @@
-# app/safety/fire_detector.py
-# Stub for custom YOLO fire classification or segmentation models
+def detect_fire(frame) -> list:
+    """
+    Placeholder interface for future custom-trained fire detection model.
+    Currently returns an empty list (no fire detected).
+    """
+    return []

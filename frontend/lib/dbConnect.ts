@@ -25,6 +25,8 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 2000,
+      tlsAllowInvalidCertificates: true,
     };
 
     console.log(`🔌 [MongoDB] Next.js attempting database connection to: ${MONGODB_URI}`);

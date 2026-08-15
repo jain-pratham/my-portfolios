@@ -12,8 +12,8 @@ logger = get_logger("Alert")
 
 class AlertDispatcher:
     """
-    Manages alerting cooldowns per camera key and coordinates the 
-    background upload/dispatch workers to keep video preview threads non-blocking.
+    Manages alert cooldowns per camera key and coordinates the 
+    background upload/dispatch workers to keep camera processing non-blocking.
     """
     def __init__(self, api_url: str = None, cooldown_seconds: int = None):
         self.api_url = api_url or settings.NEXTJS_ALERT_API
@@ -26,7 +26,6 @@ class AlertDispatcher:
     def can_trigger_alert(self, camera_key: str, current_time: float) -> bool:
         """
         Validates if the camera key is outside the cooldown window.
-        If yes, locks in the current timestamp and returns True.
         """
         with self._lock:
             last_time = self._last_alert_times.get(camera_key, 0.0)
@@ -37,10 +36,10 @@ class AlertDispatcher:
 
     def dispatch_alert(self, frame, camera_key: str, message: str = "Human detected in shop!"):
         """
-        Launches the asynchronous alert dispatch worker.
-        Creates a copy of the frame to prevent mutation issues.
+        Launches the asynchronous alert dispatch worker in a background thread.
+        Creates a copy of the frame if it exists to prevent concurrent mutation.
         """
-        frame_copy = frame.copy()
+        frame_copy = frame.copy() if frame is not None else None
         
         # Run the upload and POST request in a background thread to prevent UI freezing
         worker_thread = threading.Thread(
@@ -52,19 +51,22 @@ class AlertDispatcher:
 
     def _dispatch_worker(self, frame, camera_key: str, message: str):
         """
-        Saves snapshot, uploads to ImgBB, and posts threat metadata to Next.js API.
+        Saves snapshot, uploads to ImgBB, and posts threat metadata to the backend API.
         """
-        # Save snapshot using camera key for uniqueness to support future multi-camera setups
+        if frame is None:
+            # Skip image upload and dispatch metadata alert directly
+            logger.info(f"[Alert] No frame provided. Dispatching text alert for camera {camera_key}...")
+            self._send_payload(camera_key, "", message)
+            return
+
         temp_filename = f"detection_{camera_key}.jpg"
         
         try:
             # Save frame as local image file
             success = cv2.imwrite(temp_filename, frame)
             if not success:
-                logger.error(f"Failed to write temporary snapshot to disk for camera {camera_key}.")
+                logger.error(f"[Alert] Failed to write temporary snapshot to disk for camera {camera_key}.")
                 return
-
-            logger.info(f"Saved local snapshot to {temp_filename}")
 
             # Upload image to ImgBB
             image_url = upload_to_imgbb(temp_filename)
@@ -73,7 +75,7 @@ class AlertDispatcher:
             self._send_payload(camera_key, image_url, message)
             
         except Exception as e:
-            logger.error(f"Error during background dispatch: {e}")
+            logger.error(f"[Alert] Error during background alert dispatch: {e}")
 
     def _send_payload(self, camera_key: str, image_url: str, message: str):
         """
@@ -88,9 +90,9 @@ class AlertDispatcher:
 
         try:
             headers = {"Content-Type": "application/json"}
-            logger.info(f"Posting alert payload to Next.js endpoint: {self.api_url}...")
+            logger.info(f"[Alert] Posting alert payload to Next.js endpoint: {self.api_url}...")
             
             response = requests.post(self.api_url, data=json.dumps(payload), headers=headers, timeout=5)
-            logger.info(f"Server responded: HTTP {response.status_code} - {response.text}")
+            logger.info(f"[Alert] Server responded: HTTP {response.status_code} - {response.text}")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Connection failed: Next.js server is unreachable. (Error: {e})")
+            logger.error(f"[Alert] Connection failed: Next.js server is unreachable. (Error: {e})")

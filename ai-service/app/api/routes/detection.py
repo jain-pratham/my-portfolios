@@ -1,13 +1,21 @@
 from fastapi import APIRouter
+from app.config import settings
+from app.detection.person_detector import YOLOModelManager
 
 router = APIRouter()
 
 @router.get("/detection/status")
 def get_detection_status():
     """
-    Placeholder endpoint for detection triggers and configuration settings.
+    Exposes YOLO model parameter details and GPU/CPU device settings.
     """
+    # Force loading if not initialized
+    YOLOModelManager.get_model()
+    device = YOLOModelManager.get_device()
+    
     return {
-        "status": "not_implemented",
-        "message": "Future detection configuration APIs"
+        "success": True,
+        "modelName": settings.YOLO_MODEL,
+        "device": device,
+        "personConfidenceThreshold": settings.PERSON_CONFIDENCE
     }

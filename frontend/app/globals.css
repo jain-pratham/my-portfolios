@@ -174,4 +174,14 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Hide scrollbar globally for a clean, premium native-app feel */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 
