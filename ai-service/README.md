@@ -26,7 +26,7 @@ ai-service/
 │   ├── detection/             # YOLO models loader (PersonDetector, ObjectDetector stubs)
 │   ├── tracking/              # Object tracking history and logic stubs
 │   ├── zones/                 # Region-of-interest (ROI) boundary calculations
-│   ├── behavior/              # Loitering and suspicious action detection stubs
+│   ├── behavior/              # Suspicious movement detection stubs
 │   ├── safety/                # Fire and smoke detection model stubs
 │   ├── security/              # Business logic stubs (after-hours, cash counters, doors)
 │   ├── camera_security/       # Camera offline/tampering detection stubs
@@ -154,7 +154,7 @@ Located in the `notebooks/` directory:
 The code provides skeleton modules with defined folder locations and imports:
 - **`app/tracking/`**: Track-to-track matching across frames.
 - **`app/zones/`**: Arbitrary polygon drawing and containment validation rules.
-- **`app/behavior/`**: Loitering duration timers and motion anomaly analysis.
+- **`app/behavior/`**: Motion anomaly and pacing path analysis.
 - **`app/safety/`**: Custom smoke/fire alarm triggers.
 - **`app/security/`**: After-hours schedules, cash register monitoring, and asset bounds.
 - **`app/camera_security/`**: Disconnection tracking, feed distortion, and angle alterations.

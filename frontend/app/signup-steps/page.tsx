@@ -18,7 +18,6 @@ import {
 
 const AVAILABLE_AI_FEATURES = [
   { key: "intrusion_detection", label: "Intrusion Detection", desc: "Real-time human intrusion alerts in restricted security zones" },
-  { key: "loitering_detection", label: "Loitering Detection", desc: "Suspicious lingering alert based on dwell time thresholds" },
   { key: "fire_smoke", label: "Fire & Smoke Alert", desc: "Safety-oriented detection of active flames and smoke plumes" },
   { key: "cash_counter", label: "Cash Counter Monitoring", desc: "Commercial safety logs and cashier transaction area auditing" },
   { key: "camera_offline", label: "Camera Status Monitor", desc: "Automated notifications when camera video stream goes offline" },
@@ -29,8 +28,6 @@ const getFeatureIcon = (key: string) => {
   switch (key) {
     case "intrusion_detection":
       return <Shield className="h-3 w-3" />;
-    case "loitering_detection":
-      return <Users className="h-3 w-3" />;
     case "fire_smoke":
       return <Flame className="h-3 w-3" />;
     case "cash_counter":

@@ -13,7 +13,6 @@ from app.events.event_engine import EventEngine
 from app.camera_security.offline_detector import CameraOfflineDetector
 from app.camera_security.tampering_detector import CameraTamperingDetector
 from app.behavior.movement import MovementTracker
-from app.behavior.loitering import LoiteringDetector
 from app.behavior.suspicious import SuspiciousMovementDetector
 from app.security.after_hours import is_after_hours, OperatingHoursProvider
 
@@ -185,16 +184,7 @@ class TestPipelineFeatures(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["eventType"], "CAMERA_TAMPERING")
 
-    def test_behavior_loitering_and_suspicious_movement(self):
-        loitering = LoiteringDetector(threshold_seconds=5)
-        
-        # Elapsed duration is 2s (under loitering limit)
-        self.assertFalse(loitering.check_loitering(track_id=1, first_seen=1000, current_time=1002))
-        # Elapsed duration is 6s
-        self.assertTrue(loitering.check_loitering(track_id=1, first_seen=1000, current_time=1006))
-        # Deduplicated behavior trigger
-        self.assertFalse(loitering.check_loitering(track_id=1, first_seen=1000, current_time=1007))
-        
+    def test_behavior_suspicious_movement(self):
         # Suspicious pacing
         suspicious = SuspiciousMovementDetector(direction_changes_threshold=3, min_distance=100.0)
         metrics = {"direction_changes": 2, "distance_traveled": 120.0}

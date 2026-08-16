@@ -22,9 +22,6 @@ def get_risk_severity(event_type: str, zone_type: str = None) -> str:
         return "LOW"
         
     # Behavior metrics alerts
-    if event_type == "LOITERING":
-        return "MEDIUM"
-        
     if event_type == "SUSPICIOUS_MOVEMENT_PATTERN":
         return "MEDIUM"
 

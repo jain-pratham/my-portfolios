@@ -202,7 +202,7 @@ app.post("/api/seed", async (req: Request, res: Response) => {
         },
         {
           name: "Enterprise Pro",
-          description: "Advanced multi-site safety and loitering compliance package.",
+          description: "Advanced multi-site safety and real-time security package.",
           monthlyPrice: 1299,
           yearlyPrice: 12990,
           maxCameras: 30,
@@ -210,7 +210,7 @@ app.post("/api/seed", async (req: Request, res: Response) => {
           status: "active",
           sortOrder: 2,
           isPopular: true,
-          features: ["intrusion_detection", "loitering_detection", "camera_offline", "whatsapp_alerts", "fire_smoke"],
+          features: ["intrusion_detection", "camera_offline", "whatsapp_alerts", "fire_smoke"],
         },
         {
           name: "Enterprise Max",
@@ -222,7 +222,7 @@ app.post("/api/seed", async (req: Request, res: Response) => {
           status: "active",
           sortOrder: 3,
           isPopular: false,
-          features: ["intrusion_detection", "loitering_detection", "camera_offline", "whatsapp_alerts", "fire_smoke", "cash_counter"],
+          features: ["intrusion_detection", "camera_offline", "whatsapp_alerts", "fire_smoke", "cash_counter"],
         }
       ]);
     }

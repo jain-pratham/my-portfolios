@@ -605,7 +605,7 @@ export default function CoreWatchLandingPage() {
       tagline: 'Fully local network surveillance. Ensure ironclad security and regulatory compliance.',
       features: [
         'ATM lobby & main vault zone security audits',
-        'Lobby intrusion, loitering, and after-hours vault coverage',
+        'Lobby intrusion and after-hours vault coverage',
         'Queue length and customer wait-time analytics',
         'Unknown-face alerting at sensitive server rooms/archives',
         'Compliance-ready full on-premise deployments (No footage leaving the network)'

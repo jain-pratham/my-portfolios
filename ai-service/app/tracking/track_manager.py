@@ -13,7 +13,6 @@ class TrackState:
         self.velocity = (0.0, 0.0)  # (vx, vy)
         self.current_zone = None
         self.zone_type = None
-        self.zone_entered_at = None
         self.last_alert_times = {}  # event_type -> timestamp
         
         # Adaptive Inference Optimization & Identity fields

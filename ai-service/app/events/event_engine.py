@@ -74,8 +74,6 @@ class EventEngine:
                     event["message"] = f"Camera connection recovered."
                 elif event_type == "CAMERA_TAMPERING":
                     event["message"] = f"Camera tampering detected."
-                elif event_type == "LOITERING":
-                    event["message"] = f"Loitering detected: person in area unusually long."
                 elif event_type == "SUSPICIOUS_MOVEMENT_PATTERN":
                     event["message"] = f"Suspicious movement pacing detected."
                 elif event_type in ("ZONE_ENTRY", "ZONE_DWELL"):

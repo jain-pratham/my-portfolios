@@ -11,7 +11,6 @@ from app.tracking.track_manager import TrackManager
 from app.zones.zone_manager import ZoneManager
 from app.zones.zone_rules import ZoneRulesEngine
 from app.behavior.movement import MovementTracker
-from app.behavior.loitering import LoiteringDetector
 from app.behavior.suspicious import SuspiciousMovementDetector
 from app.camera_security.offline_detector import CameraOfflineDetector
 from app.camera_security.tampering_detector import CameraTamperingDetector
@@ -74,7 +73,6 @@ class CameraRuntime:
         
         # Behaviors
         self.movement_tracker = MovementTracker()
-        self.loitering_detector = LoiteringDetector()
         self.suspicious_detector = SuspiciousMovementDetector()
 
         # Stream security monitors
@@ -309,7 +307,7 @@ class CameraRuntime:
                         timestamp=now
                     )
 
-                    # Evaluate behaviors (loitering, pacing)
+                    # Evaluate behaviors (pacing)
                     behavior_events = []
                     for det in enriched_detections:
                         track_id = det.get("trackId")
@@ -321,19 +319,6 @@ class CameraRuntime:
                         first_seen = det.get("firstSeen", now)
 
                         metrics = self.movement_tracker.update(track_id, foot_pt, now)
-
-                        # Check loitering rule
-                        if self.loitering_detector.check_loitering(track_id, first_seen, now):
-                            track_state.has_suspicious_behavior = True
-                            behavior_events.append({
-                                "eventType": "LOITERING",
-                                "cameraId": self.camera_key,
-                                "trackId": track_id,
-                                "timestamp": now,
-                                "bbox": det.get("bbox"),
-                                "zoneId": track_state.current_zone,
-                                "zoneType": track_state.zone_type
-                            })
 
                         # Check suspicious pacing rule
                         if self.suspicious_detector.check_suspicious_movement(track_id, metrics):
@@ -353,7 +338,6 @@ class CameraRuntime:
                     dead_tracks = [tid for tid in self.movement_tracker.track_histories.keys() if tid not in active_tids]
                     self.movement_tracker.cleanup(dead_tracks)
                     for tid in dead_tracks:
-                        self.loitering_detector.reset_track(tid)
                         self.suspicious_detector.reset_track(tid)
 
                     # Determine active security event and trigger cooldown/boost
@@ -367,7 +351,7 @@ class CameraRuntime:
                             if zone and zone.get("type") in ("RESTRICTED", "VALUABLE"):
                                 has_security_event = True
                                 break
-                        elif e_type in ("LOITERING", "SUSPICIOUS_MOVEMENT_PATTERN"):
+                        elif e_type == "SUSPICIOUS_MOVEMENT_PATTERN":
                             has_security_event = True
                             break
 

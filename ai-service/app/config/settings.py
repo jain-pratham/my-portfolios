@@ -29,7 +29,6 @@ class Settings:
     # Security & Behavior Rules
     ZONE_REFRESH_SECONDS: int = int(os.getenv("ZONE_REFRESH_SECONDS", "30"))
     CAMERA_OFFLINE_AFTER_SECONDS: int = int(os.getenv("CAMERA_OFFLINE_AFTER_SECONDS", "30"))
-    LOITERING_THRESHOLD_SECONDS: int = int(os.getenv("LOITERING_THRESHOLD_SECONDS", "10"))
     TIMEZONE: str = os.getenv("TIMEZONE", "Asia/Kolkata")
     
     # Tampering Detection Heuristics
