@@ -1,0 +1,112 @@
+# ==============================================================================
+# COREWATCH MONOREPO MASTER GITIGNORE
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. GENERAL / SYSTEM / IDE
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+$_ANDSOFORTH
+Thumbs.db
+desktop.ini
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ------------------------------------------------------------------------------
+# 2. LOGS & TEMPORARY FILES
+# ------------------------------------------------------------------------------
+*.log
+logs/
+*.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# 3. ENVIRONMENT & SECRETS (Do NOT commit keys/tokens/envs)
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.env.production
+.env*
+*.pem
+
+# Explicitly allow configuration templates
+!.env.example
+!*.env.example
+!.env.template
+
+# ------------------------------------------------------------------------------
+# 4. NODEJS & FRONTEND / BACKEND COMMON
+# ------------------------------------------------------------------------------
+node_modules/
+/node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+coverage/
+
+# ------------------------------------------------------------------------------
+# 5. FRONTEND-SPECIFIC (Next.js & TypeScript)
+# ------------------------------------------------------------------------------
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.vercel
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# ------------------------------------------------------------------------------
+# 6. BACKEND-SPECIFIC (Express & Uploads)
+# ------------------------------------------------------------------------------
+backend/dist/
+backend/uploads/
+backend/uploads/snapshots/
+
+# ------------------------------------------------------------------------------
+# 7. AI SERVICE-SPECIFIC (Python & PyTorch & YOLO)
+# ------------------------------------------------------------------------------
+# Python Virtual Environments
+ai-service/venv/
+ai-service/.venv/
+ai-service/env/
+ai-service/ENV/
+
+# Python compiled files and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Model Weights and Large Model Files
+ai-service/weights/
+*.pt
+*.pth
+*.onnx
+
+# Dynamic snapshot storage
+ai-service/snapshots/

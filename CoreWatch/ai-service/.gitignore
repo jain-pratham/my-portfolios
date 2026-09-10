@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Local configuration secrets
+.env
+.env.local
+
+# ML Models and weights
+*.pt
+*.pth
+*.onnx
+
+# Snapshot images
+detection.jpg
+detection_*.jpg
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Brand board exact colors */
+  --brand-navy: #050A30;
+  --brand-deep-navy: #020415;
+  --brand-brown: #3E160C;
+  --brand-gold: #785D32;
+  --brand-gold-light: #C0A06E;
+  --brand-cream: #E8D9C4;
+  --brand-background: #FAF6EE;
+
+  /* Legacy color mapping fallback variables for backward compatibility */
+  --brand-blue: #785D32;
+  --brand-offwhite: #FAF6EE;
+  --brand-dark-navy: #020415;
+  --brand-light-blue: #E8D9C4;
+  --brand-light-gold: #C0A06E;
+
+  /* Semantic Status Colors */
+  --status-success: #10B981;    /* Green */
+  --status-warning: #F59E0B;    /* Amber */
+  --status-critical: #EF4444;   /* Red */
+  --status-info: #3B82F6;       /* Blue */
+  --status-offline: #6B7280;    /* Gray */
+  --status-monitoring: #785D32; /* Gold */
+
+  /* Layout & Surfaces (Light Mode) */
+  --background: var(--brand-background);
+  --foreground: var(--brand-navy);
+
+  --card: #FFFFFF;
+  --card-foreground: var(--brand-navy);
+
+  --popover: #FFFFFF;
+  --popover-foreground: var(--brand-navy);
+
+  /* Core Brand Colors (Light Mode) */
+  --primary: var(--brand-gold);
+  --primary-foreground: var(--brand-background);
+
+  --secondary: var(--brand-brown);
+  --secondary-foreground: var(--brand-background);
+
+  --accent: var(--brand-gold-light);
+  --accent-foreground: var(--brand-navy);
+
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+
+  --destructive: var(--status-critical);
+  --destructive-foreground: #FFFFFF;
+
+  --border: rgba(62, 22, 12, 0.15); /* Rough brown with low opacity */
+  --input: rgba(62, 22, 12, 0.15);
+  --ring: var(--brand-gold);
+
+  /* Command Center Sidebar */
+  --sidebar-background: #FAF6EE;
+  --sidebar-foreground: #3E160C;
+  --sidebar-accent: #FAF6EE;
+  --sidebar-border: rgba(120, 93, 50, 0.12);
+  --sidebar-ring: var(--brand-gold);
+
+  --radius: 0.375rem; /* Command center style - less rounded */
+}
+
+.dark {
+  /* Layout & Surfaces (Dark Mode) */
+  --background: #000000;
+  --foreground: var(--brand-cream);
+
+  --card: #0E0F12;
+  --card-foreground: var(--brand-cream);
+
+  --popover: #0E0F12;
+  --popover-foreground: var(--brand-cream);
+
+  /* Core Brand Colors (Dark Mode) */
+  --primary: var(--brand-gold);
+  --primary-foreground: #000000;
+
+  --secondary: var(--brand-cream);
+  --secondary-foreground: #0E0F12;
+
+  --accent: var(--brand-gold-light);
+  --accent-foreground: #000000;
+
+  --muted: #16171D; /* Deep gray hover/active surface */
+  --muted-foreground: #94A3B8;
+
+  --destructive: var(--status-critical);
+  --destructive-foreground: var(--brand-cream);
+
+  --border: rgba(192, 160, 110, 0.15); /* Gold border with low opacity */
+  --input: rgba(192, 160, 110, 0.15);
+  --ring: var(--brand-gold);
+
+  /* Command Center Sidebar (Dark Mode) */
+  --sidebar-background: #0A0B0E;
+  --sidebar-foreground: var(--brand-cream);
+  --sidebar-accent: var(--brand-brown);
+  --sidebar-border: rgba(192, 160, 110, 0.15);
+  --sidebar-ring: var(--brand-gold);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Brand board specific classes */
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-deep-navy: var(--brand-deep-navy);
+  --color-brand-brown: var(--brand-brown);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-light: var(--brand-gold-light);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-background: var(--brand-background);
+
+  /* Compatibility bindings for legacy utilities */
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-offwhite: var(--brand-offwhite);
+  --color-brand-dark-navy: var(--brand-dark-navy);
+  --color-brand-light-blue: var(--brand-light-blue);
+  --color-brand-light-gold: var(--brand-light-gold);
+
+  /* Override dark gray tailwind surfaces with brand navy */
+  --color-slate-900: var(--brand-navy);
+  --color-slate-950: var(--brand-deep-navy);
+  --color-zinc-900: var(--brand-navy);
+  --color-zinc-950: var(--brand-deep-navy);
+  --color-zinc-800: var(--brand-deep-navy);
+
+  --font-sans: var(--font-geist-sans, "Geist", ui-sans-serif, system-ui, sans-serif);
+  --font-mono: var(--font-geist-mono, "Geist Mono", ui-monospace, monospace);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Hide scrollbar globally for a clean, premium native-app feel */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+

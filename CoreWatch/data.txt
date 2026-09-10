@@ -1,0 +1,11 @@
+#	Service	Purpose
+1	👤 Human Detection & Tracking	Camera me person detect aur track karna
+2	🚧 Zone Monitoring	Specific/restricted areas me unauthorized presence detect karna
+3	🌙 After-Hours Security	Business hours ke baad person detect karna
+5	🔄 Suspicious Movement Detection	Pacing/back-and-forth jaise suspicious movement detect karna
+6	📹 Camera Health & Tampering Detection	Camera offline, freeze, blocked ya angle change detect karna
+7	⚠️ Risk-Based Alerting	Detected events ko Low/Medium/High/Critical risk me classify karna
+8	📸 AI Evidence Capture	Alert ke time snapshot/evidence generate karna
+
+
+4	⏳ Loitering Detection	Kisi person ka unusual time tak area me rukna
