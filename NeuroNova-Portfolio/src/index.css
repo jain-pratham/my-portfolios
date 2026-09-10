@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* global.css */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+
+/* extra global styles */
+body {
+  background-color: #0b111e; 
+  color: #f1f5f9;
+}
