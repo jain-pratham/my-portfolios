@@ -1,0 +1,15 @@
+@keyframes floatY {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float-soft:hover {
+  animation: floatY 1.2s ease-in-out infinite;
+}
