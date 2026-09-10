@@ -1,0 +1,102 @@
+# ==========================================
+# Next.js & Build Outputs
+# ==========================================
+/.next/
+/out/
+/build/
+/dist/
+/.swc/
+*.tsbuildinfo
+next-env.d.ts
+
+# ==========================================
+# Dependencies
+# ==========================================
+/node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ==========================================
+# Environment & Secret Files
+# ==========================================
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+!.env.example
+!.env.template
+
+# ==========================================
+# Debug & Runtime Logs
+# ==========================================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# ==========================================
+# Testing & Code Coverage
+# ==========================================
+/coverage/
+/.nyc_output/
+
+# ==========================================
+# IDEs, Editors & Tooling
+# ==========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Vercel & Deployment
+.vercel
+
+# Turborepo / Turbopack
+.turbo
+
+# Antigravity / Local Agent Workspaces
+.gemini/
+
+# ==========================================
+# Operating System Files
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Security & Certificates
+*.pem
+*.key
+*.crt
+
